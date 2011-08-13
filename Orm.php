@@ -43,4 +43,15 @@ class Zeal_Orm
 
         return self::$_mapperRegistry->getMapper($class);
     }
+
+    /**
+     * Returns any public properties of the supplied object
+     *
+     * @param object $object
+     * @return array
+     */
+    static public function getPublicProperties($object)
+    {
+    	return array_keys(get_object_vars($object));
+    }
 }

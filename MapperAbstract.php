@@ -166,7 +166,7 @@ abstract class Zeal_MapperAbstract implements Zeal_MapperInterface
      *
      * @return string
      */
-    public function getClassName()
+    public function getClassName($data = null)
     {
         if (!$this->_className) {
             // assume that the class name is the same as the mapper class,
@@ -368,7 +368,7 @@ abstract class Zeal_MapperAbstract implements Zeal_MapperInterface
      */
     public function arrayToObject(array $data, $guard = true)
     {
-        $className = $this->getClassName();
+        $className = $this->getClassName($data);
         if (!$className) {
             // check for class fields
             if (isset($this->_fields['class']) && $this->_fields['class'] == 'class' && !empty($data['class'])) {
@@ -553,7 +553,16 @@ abstract class Zeal_MapperAbstract implements Zeal_MapperInterface
      */
     public function fetchOne($query)
     {
-        $data = $this->getAdapter()->fetchOne($query);
+		return $this->fetchObject($query);
+    }
+
+    /**
+     * (non-PHPdoc)
+     * @see Zeal_MapperInterface#fetchObject($query)
+     */
+    public function fetchObject($query)
+    {
+        $data = $this->getAdapter()->fetchObject($query);
         if ($data) {
             return $this->resultToObject($data, false);
         }
@@ -687,7 +696,6 @@ abstract class Zeal_MapperAbstract implements Zeal_MapperInterface
     protected function _save($object)
     {
         return $this->getAdapter()->save($object);
-
     }
 
     /**
@@ -806,14 +814,20 @@ abstract class Zeal_MapperAbstract implements Zeal_MapperInterface
     public function lazyLoadObject(Zeal_Model_Association_DataInterface $data)
     {
         $query = $this->buildAssociationQuery($data->getAssociation());
+        if ($query) {
+        	return $this->fetchObject($query);
+        }
 
-        return $this->fetchOne($query);
+        return null;
     }
 
     public function lazyLoadObjects(Zeal_Model_Association_Data_CollectionInterface $collection)
     {
         $query = $this->buildAssociationQuery($collection->getAssociation());
+        if ($query) {
+        	return $this->fetchAll($query);
+        }
 
-        return $this->fetchAll($query);
+        return array();
     }
 }
