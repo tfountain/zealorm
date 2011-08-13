@@ -39,7 +39,7 @@ interface Zeal_Mapper_AdapterInterface
      * @param Zeal_Mapper_QueryInterface $query
      * @return object|false
      */
-    public function fetchOne(Zeal_Mapper_QueryInterface $query = null);
+    public function fetchObject(Zeal_Mapper_QueryInterface $query = null);
 
     /**
      * Returns all objects matching the supplied query

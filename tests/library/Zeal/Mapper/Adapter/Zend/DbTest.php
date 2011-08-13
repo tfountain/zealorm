@@ -1,11 +1,12 @@
 <?php
-require_once 'library/Zeal/Mapper/_files/User.php';
-require_once 'library/Zeal/Mapper/_files/UserMapper.php';
+require_once 'library/Zeal/_files/User.php';
+require_once 'library/Zeal/_files/UserMapper.php';
 
-require_once 'library/Zeal/Mapper/_files/Address.php';
-require_once 'library/Zeal/Mapper/_files/AddressMapper.php';
+require_once 'library/Zeal/_files/Address.php';
+require_once 'library/Zeal/_files/AddressMapper.php';
 
-require_once 'library/Zeal/Mapper/_files/DummyMapper.php';
+require_once 'library/Zeal/_files/GenericMapper.php';
+
 
 class Zeal_Mapper_Adapter_Zend_DbTest extends PHPUnit_Framework_TestCase
 {
@@ -42,7 +43,7 @@ class Zeal_Mapper_Adapter_Zend_DbTest extends PHPUnit_Framework_TestCase
 
     public function testTableNameYPlurals()
     {
-        $mapper = new DummyMapper();
+        $mapper = new GenericMapper();
         $mapper->setClassName('Category');
         $this->_adapter->setMapper($mapper);
 
@@ -51,7 +52,7 @@ class Zeal_Mapper_Adapter_Zend_DbTest extends PHPUnit_Framework_TestCase
 
     public function testTableNameSPlurals()
     {
-        $mapper = new DummyMapper();
+        $mapper = new GenericMapper();
         $mapper->setClassName('News');
         $this->_adapter->setMapper($mapper);
 
@@ -60,7 +61,7 @@ class Zeal_Mapper_Adapter_Zend_DbTest extends PHPUnit_Framework_TestCase
 
     public function testTableNameXPlurals()
     {
-        $mapper = new DummyMapper();
+        $mapper = new GenericMapper();
         $mapper->setClassName('Box');
         $this->_adapter->setMapper($mapper);
 

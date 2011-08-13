@@ -60,7 +60,7 @@ class Zeal_Mapper_Adapter_Zend_Db extends Zeal_Mapper_AdapterAbstract
 
             // we tried!
             if (!self::$_db) {
-                throw new Zeal_Mapper_Exception('No database adapter. Please either set one using Zeal_Mapper_Adapter_Mysql::setDb() or put one in the Zend_Registry using the key \'db\'');
+                throw new Zeal_Mapper_Exception('No database adapter. Please either set one using '.__CLASS__.'::setDb() or put one in the Zend_Registry using the key \'db\'');
             }
         }
 
@@ -241,7 +241,7 @@ class Zeal_Mapper_Adapter_Zend_Db extends Zeal_Mapper_AdapterAbstract
      * (non-PHPdoc)
      * @see Mapper/Zeal_Mapper_AdapterInterface#fetchOne($query)
      */
-    public function fetchOne(Zeal_Mapper_QueryInterface $query = null)
+    public function fetchObject(Zeal_Mapper_QueryInterface $query = null)
     {
         $query->limit(1);
 
@@ -392,7 +392,8 @@ class Zeal_Mapper_Adapter_Zend_Db extends Zeal_Mapper_AdapterAbstract
                 $value = $association->getModel()->$foreignKey;
 
 		        if (!isset($value)) {
-		            throw new Zeal_Model_Exception("Unable to populate belongsTo query for association '".$association->getShortname()."' in ".$association->getModelMapper()->getClassName()." as the model has no value for the foreign key '$foreignKey'");
+		            //throw new Zeal_Model_Exception("Unable to populate belongsTo query for association '".$association->getShortname()."' in ".$association->getModelMapper()->getClassName()." as the model has no value for the foreign key '$foreignKey'");
+		            return false;
 		        }
 
                 $query->where("$key = ?", $association->getModel()->$foreignKey);
@@ -403,7 +404,8 @@ class Zeal_Mapper_Adapter_Zend_Db extends Zeal_Mapper_AdapterAbstract
                 $value = $association->getModel()->$key;
 
         		if (!isset($value)) {
-		            throw new Zeal_Model_Exception("Unable to populate belongsTo query for association '".$association->getShortname()."' in ".$association->getModelMapper()->getClassName()." as the field '$key' has no value in model");
+		            //throw new Zeal_Model_Exception("Unable to populate belongsTo query for association '".$association->getShortname()."' in ".$association->getModelMapper()->getClassName()." as the field '$key' has no value in model");
+		            return false;
 		        }
 
                 $query = $association->getMapper()->query();
@@ -416,7 +418,8 @@ class Zeal_Mapper_Adapter_Zend_Db extends Zeal_Mapper_AdapterAbstract
                 $value = $association->getModel()->$key;
 
                 if (!isset($value)) {
-		            throw new Zeal_Model_Exception("Unable to populate belongsTo query for association '".$association->getShortname()."' in ".$association->getModelMapper()->getClassName()." as the field '$key' has no value in model");
+		            //throw new Zeal_Model_Exception("Unable to populate belongsTo query for association '".$association->getShortname()."' in ".$association->getModelMapper()->getClassName()." as the field '$key' has no value in model");
+		            return false;
 		        }
 
                 $query = $association->getMapper()->query();

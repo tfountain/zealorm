@@ -1,9 +1,9 @@
 <?php
 
-require_once 'library/Zeal/Mapper/_files/User.php';
-require_once 'library/Zeal/Mapper/_files/UserMapper.php';
-require_once 'library/Zeal/Mapper/_files/Address.php';
-require_once 'library/Zeal/Mapper/_files/AddressMapper.php';
+require_once 'library/Zeal/_files/User.php';
+require_once 'library/Zeal/_files/UserMapper.php';
+require_once 'library/Zeal/_files/Address.php';
+require_once 'library/Zeal/_files/AddressMapper.php';
 
 class Zeal_Mapper_Adapter_MongoDbTest extends PHPUnit_Framework_TestCase
 {

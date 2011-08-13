@@ -1,13 +1,13 @@
 <?php
 
-require_once 'library/Zeal/Mapper/_files/DummyMapper.php';
-require_once 'library/Zeal/Mapper/_files/Dummy.php';
+require_once 'library/Zeal/_files/UserMapper.php';
+require_once 'library/Zeal/_files/User.php';
 
 class Zeal_Mapper_FieldType_DateTimeTest extends PHPUnit_Framework_TestCase
 {
     public function setUp()
     {
-        $this->_mapper = new DummyMapper();
+        $this->_mapper = new UserMapper();
         $this->_mapper->setFields(array(
             'date' => 'datetime'
         ));

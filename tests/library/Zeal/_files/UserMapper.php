@@ -2,7 +2,7 @@
 
 class UserMapper extends Zeal_MapperAbstract
 {
-    protected $_className = 'User';
+	protected $_className = 'User';
 
     protected $_fields = array(
         'username' => 'string',

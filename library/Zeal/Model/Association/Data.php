@@ -18,6 +18,14 @@ class Zeal_Model_Association_Data implements Zeal_Model_Association_DataInterfac
     protected $_loaded = false;
 
     /**
+     * Boolean to indicate whether or not loading should be attempted, if has
+     * not been done already
+     *
+     * @var boolean
+     */
+    protected $_loadRequired = true;
+
+    /**
      * The object created the association
      *
      * @var object
@@ -56,7 +64,7 @@ class Zeal_Model_Association_Data implements Zeal_Model_Association_DataInterfac
 
     public function __get($var)
     {
-        if (!$this->_loaded) {
+        if (!$this->_loaded && $this->_loadRequired) {
             $this->load();
         }
 
@@ -65,7 +73,7 @@ class Zeal_Model_Association_Data implements Zeal_Model_Association_DataInterfac
 
     public function __call($name, $arguments)
     {
-        if (!$this->_loaded) {
+        if (!$this->_loaded && $this->_loadRequired) {
             $this->load();
         }
 
@@ -74,7 +82,14 @@ class Zeal_Model_Association_Data implements Zeal_Model_Association_DataInterfac
 
     public function __set($var, $value)
     {
-        // TODO
+        if (!$this->_object) {
+        	$className = $this->getAssociation()->getClassName();
+        	$this->_object = new $className();
+
+			$this->_loadRequired = false;
+        }
+
+        $this->_object->$var = $value;
     }
 
     /**
@@ -153,7 +168,7 @@ class Zeal_Model_Association_Data implements Zeal_Model_Association_DataInterfac
      */
     public function getObject()
     {
-        if (!$this->_loaded) {
+        if (!$this->_loaded && $this->_loadRequired) {
             $this->load();
         }
 
@@ -232,7 +247,7 @@ class Zeal_Model_Association_Data implements Zeal_Model_Association_DataInterfac
     public function __toString()
     {
         try {
-            if (!$this->_loaded) {
+            if (!$this->_loaded && $this->_loadRequired) {
                 $this->load();
             }
 
@@ -255,11 +270,14 @@ class Zeal_Model_Association_Data implements Zeal_Model_Association_DataInterfac
      * @param array $data
      * @return object
      */
-    public function build(array $data = null)
+    public function build(array $data = array())
     {
         $className = $this->getAssociation()->getClassName();
         $object = $this->getMapper()->arrayToObject($data);
         $this->getAssociation()->populateObject($object);
+
+        $this->_object = $object;
+        $this->_loadRequired = false;
 
         return $object;
     }
@@ -269,7 +287,7 @@ class Zeal_Model_Association_Data implements Zeal_Model_Association_DataInterfac
      * @param array $data
      * @return boolean
      */
-    public function create(array $data = null)
+    public function create(array $data = array())
     {
         $object = $this->build($data);
 

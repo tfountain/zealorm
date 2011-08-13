@@ -11,30 +11,25 @@
 abstract class Zeal_ModelAbstract implements Zeal_ModelInterface
 {
     /**
-     * Stores all model data
-     *
-     * @var array
-     */
-    protected $_data = array();
-
-    /**
      * An array of association objects
      *
      * @var array
      */
-    protected $_associations = array();
+    protected $associations = array();
 
     /**
      * An array of association data objects
      *
      * @var array
      */
-    protected $_associationData = array();
+    protected $associationData = array();
 
     static protected $_availableBehaviours = array();
     protected $_activeBehaviours = array();
-    protected $_mappedBehaviourProperties = array();
-    protected $_mappedBehaviourMethods = array();
+    protected $mappedBehaviourProperties = array();
+    protected $mappedBehaviourMethods = array();
+
+    protected $unsavedAssociationData = array();
 
     /**
      * Model constructor
@@ -112,9 +107,9 @@ abstract class Zeal_ModelAbstract implements Zeal_ModelInterface
             // use the get method
             return $this->$getMethodName();
 
-        } else if (array_key_exists($var, $this->_data)) {
-            // return the value from the data array
-            return $this->_data[$var];
+        } else if (isset($this->$var) || property_exists($this, $var)) {
+            // return the value
+            return $this->$var;
 
         } else if ($this->isAssociation($var)) {
             // return association data
@@ -141,21 +136,31 @@ abstract class Zeal_ModelAbstract implements Zeal_ModelInterface
             return $this->$setMethodName($value);
 
         } else if ($this->isAssociation($var)) {
-
-            if (!isset($this->_associationData[$var])) {
+            if (!isset($this->associationData[$var])) {
                 // create data set
-                $associationData = $this->_associations[$var]->initAssociationData();
+                $associationData = $this->associations[$var]->initAssociationData();
 
                 // populate stuff it might need
-                $associationData->setAssociation($this->_associations[$var])
-                                ->setModel($this)
-                                ->setData($value);
+                $associationData->setAssociation($this->associations[$var])
+                                ->setModel($this);
 
-                $this->_associationData[$var] = $associationData;
+                $this->associationData[$var] = $associationData;
+            }
+
+            if (is_array($value)) {
+            	foreach ($value as $key => $data) {
+            		$this->associationData[$var]->$key = $data;
+            	}
+
+            } else if ($value instanceof Valuation_Model_Address) {
+            	$this->associationData[$var]->setObject($value);
+
+            } else if (!is_null($value)) {
+            	throw new Zeal_Model_Exception('Invalid data passed as value for association \''.$var.'\'');
             }
 
         } else {
-            $this->_data[$var] = $value;
+            $this->$var = $value;
         }
     }
 
@@ -190,13 +195,69 @@ abstract class Zeal_ModelAbstract implements Zeal_ModelInterface
             $value = $this->$getMethodName();
             return empty($value);
 
-        } else if (array_key_exists($var, $this->_data)) {
-            return !empty($this->_data[$var]);
-
         } else {
-            return false;
+        	return isset($this->$var);
         }
     }
+
+    /**
+     *
+     * @return unknown_type
+     */
+	public function __sleep()
+	{
+		$sleepFields = array();
+
+		// add the standard fields
+		$mapper = Zeal_Orm::getMapper($this);
+		$fields = $mapper->getFields();
+		foreach ($fields as $field) {
+			if (property_exists($this, $field)) {
+				$sleepFields[] = $field;
+			}
+		}
+
+		// add any public properties
+		$sleepFields = array_merge($sleepFields, Zeal_Orm::getPublicProperties($this));
+
+		// add any unsaved association data objects
+		foreach ($this->associationData as $associationData) {
+			if (true) { // TODO check if the data is saved or not
+				$object = $associationData->getObject();
+				if ($object) {
+					$this->unsavedAssociationData[$associationData->getAssociation()->getShortname()] = $object->toArray();
+					$sleepFields[] = 'unsavedAssociationData';
+				}
+			}
+		}
+
+		$sleepFields = array_unique($sleepFields);
+
+		return $sleepFields;
+	}
+
+	/**
+	 *
+	 * @return unknown_type
+	 */
+	public function __wakeup()
+	{
+		// restore any associations
+		$this->init();
+
+		// move any unsaved association data back into the appropriate objects
+		if (count($this->unsavedAssociationData) > 0) {
+			foreach ($this->unsavedAssociationData as $associationShortname => $data) {
+				if ($this->isAssociation($associationShortname)) {
+					$this->$associationShortname->build($data);
+				} else {
+					// error here? we have data for an association which doesn't exist
+				}
+			}
+
+			$this->unsavedAssociationData = array();
+		}
+	}
 
     /**
      * Returns an array of data held by this model
@@ -205,7 +266,15 @@ abstract class Zeal_ModelAbstract implements Zeal_ModelInterface
      */
     public function toArray()
     {
-        return $this->_data;
+    	$mapper = Zeal_Orm::getMapper($this);
+		$fields = $mapper->getFields();
+
+		$data = array();
+		foreach ($fields as $field => $fieldType) {
+			$data[$field] = isset($this->$field) ? $this->$field : null;
+		}
+
+		return $data;
     }
 
     /**
@@ -222,7 +291,7 @@ abstract class Zeal_ModelAbstract implements Zeal_ModelInterface
     protected function _initAssociation($type, $associationShortname, $options = array())
     {
         // make sure it doesn't already exist
-        if (array_key_exists($associationShortname, $this->_associations)) {
+        if (array_key_exists($associationShortname, $this->associations)) {
             throw new Zeal_Model_Exception('Association \''.htmlspecialchars($associationShortname).'\' already exists');
         }
 
@@ -259,7 +328,7 @@ abstract class Zeal_ModelAbstract implements Zeal_ModelInterface
             ->setClassName($mapper->getClassName());
 
         // store the association in the model
-        $this->_associations[$associationShortname] = $association;
+        $this->associations[$associationShortname] = $association;
     }
 
     /**
@@ -314,7 +383,7 @@ abstract class Zeal_ModelAbstract implements Zeal_ModelInterface
      */
     public function isAssociation($associationShortname)
     {
-        return isset($this->_associations[$associationShortname]);
+        return isset($this->associations[$associationShortname]);
     }
 
     /**
@@ -325,7 +394,7 @@ abstract class Zeal_ModelAbstract implements Zeal_ModelInterface
      */
     public function getAssociation($associationShortname)
     {
-        return $this->_associations[$associationShortname];
+        return $this->associations[$associationShortname];
     }
 
     /**
@@ -335,7 +404,7 @@ abstract class Zeal_ModelAbstract implements Zeal_ModelInterface
      */
     public function getAssociations()
     {
-        return $this->_associations;
+        return $this->associations;
     }
 
     /**
@@ -364,9 +433,9 @@ abstract class Zeal_ModelAbstract implements Zeal_ModelInterface
      */
     protected function _getAssociationData($associationShortname)
     {
-        if (!isset($this->_associationData[$associationShortname])) {
+        if (!isset($this->associationData[$associationShortname])) {
 
-            $association = $this->_associations[$associationShortname];
+            $association = $this->associations[$associationShortname];
 
             // initialise association data class
             $associationData = $association->initAssociationData();
@@ -376,10 +445,10 @@ abstract class Zeal_ModelAbstract implements Zeal_ModelInterface
                             ->setModel($this);
 
             // store in the model
-            $this->_associationData[$associationShortname] = $associationData;
+            $this->associationData[$associationShortname] = $associationData;
         }
 
-        return $this->_associationData[$associationShortname];
+        return $this->associationData[$associationShortname];
     }
 
     /**
@@ -453,7 +522,7 @@ abstract class Zeal_ModelAbstract implements Zeal_ModelInterface
      */
     protected function _isBehaviourProperty($var)
     {
-        if (isset($this->_mappedBehaviourProperties[$var])) {
+        if (isset($this->mappedBehaviourProperties[$var])) {
             return true;
         }
 
@@ -461,7 +530,7 @@ abstract class Zeal_ModelAbstract implements Zeal_ModelInterface
             $properties = get_object_vars($behaviourClass);
 
             if (array_key_exists($var, $properties)) {
-                $this->_mappedBehaviourProperties[$var] = $behaviourShortname;
+                $this->mappedBehaviourProperties[$var] = $behaviourShortname;
                 return true;
             }
         }
@@ -477,13 +546,13 @@ abstract class Zeal_ModelAbstract implements Zeal_ModelInterface
      */
     protected function _getBehaviourProperty($var)
     {
-        if (isset($this->_mappedBehaviourProperties[$var])) {
+        if (isset($this->mappedBehaviourProperties[$var])) {
             // make sure the behaviour has been initialised - triggers any behaviour specific loading etc.
-            if (!$this->_activeBehaviours[$this->_mappedBehaviourProperties[$var]]->isLoaded()) {
-                $this->_activeBehaviours[$this->_mappedBehaviourProperties[$var]]->load();
+            if (!$this->_activeBehaviours[$this->mappedBehaviourProperties[$var]]->isLoaded()) {
+                $this->_activeBehaviours[$this->mappedBehaviourProperties[$var]]->load();
             }
 
-            return $this->_activeBehaviours[$this->_mappedBehaviourProperties[$var]]->$var;
+            return $this->_activeBehaviours[$this->mappedBehaviourProperties[$var]]->$var;
         }
 
         throw new Zeal_Model_Exception('Invalid behaviour property \''.htmlspecialchars($var).'\'');
@@ -500,14 +569,14 @@ abstract class Zeal_ModelAbstract implements Zeal_ModelInterface
      */
     protected function _isBehaviourMethod($name)
     {
-        if (isset($this->_mappedBehaviourMethods[$name])) {
+        if (isset($this->mappedBehaviourMethods[$name])) {
             return true;
         }
 
         foreach ($this->_activeBehaviours as $behaviour => $behaviourClass) {
             // check behaviour class methods
             if (in_array($name, get_class_methods($behaviourClass))) {
-                $this->_mappedBehaviourMethods[$name] = $behaviour;
+                $this->mappedBehaviourMethods[$name] = $behaviour;
                 return true;
             }
         }
@@ -525,10 +594,10 @@ abstract class Zeal_ModelAbstract implements Zeal_ModelInterface
     protected function _callBehaviourMethod($name, $arguments)
     {
         // make sure the behaviour has been initialised - triggers any behaviour specific loading etc.
-        if (!$this->_activeBehaviours[$this->_mappedBehaviourMethods[$name]]->isLoaded()) {
-            $this->_activeBehaviours[$this->_mappedBehaviourMethods[$name]]->load();
+        if (!$this->_activeBehaviours[$this->mappedBehaviourMethods[$name]]->isLoaded()) {
+            $this->_activeBehaviours[$this->mappedBehaviourMethods[$name]]->load();
         }
 
-        return $this->_activeBehaviours[$this->_mappedBehaviourMethods[$name]]->$name($arguments);
+        return $this->_activeBehaviours[$this->mappedBehaviourMethods[$name]]->$name($arguments);
     }
 }

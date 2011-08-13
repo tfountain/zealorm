@@ -94,6 +94,15 @@ abstract class Zeal_Model_AssociationAbstract implements Zeal_Model_AssociationI
     }
 
     /**
+     * (non-PHPdoc)
+     * @see Model/Zeal_Model_AssociationInterface#getOptions()
+     */
+    public function getOptions()
+    {
+    	return $this->_options;
+    }
+
+    /**
      * Returns the association type, which is one of the constants
      * defined in Zeal_Model_AssociationInterface
      *

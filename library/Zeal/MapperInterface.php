@@ -52,6 +52,11 @@ interface Zeal_MapperInterface
      */
     public function setOption($key, $value);
 
+    /**
+     *
+     * @param $key
+     * @return unknown_type
+     */
     public function getOption($key);
 
     /**
@@ -68,7 +73,7 @@ interface Zeal_MapperInterface
      * @param Zeal_QueryInterface $query
      * @return object|false
      */
-    public function fetchOne($query);
+    public function fetchObject($query);
 
     /**
      * Returns all objects matching the supplied query
@@ -145,7 +150,7 @@ interface Zeal_MapperInterface
      * Lazy load data for the supplied data set.
      *
      * @param Zeal_Model_Association_DataInterface $data
-     * @return object
+     * @return object|null
      */
     public function lazyLoadObject(Zeal_Model_Association_DataInterface $data);
 
