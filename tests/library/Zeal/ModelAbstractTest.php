@@ -90,4 +90,5 @@ class Zeal_ModelAbstractTest extends PHPUnit_Framework_TestCase
 
 		$this->assertEquals('1 My Road', unserialize(serialize($user))->address->address1);
 	}
+
 }

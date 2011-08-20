@@ -8,7 +8,7 @@
  * @license    New BSD License - http://tfountain.co.uk/license/new-bsd
  */
 
-class Zeal_Model_Association_Data_Collection implements Zeal_Model_Association_Data_CollectionInterface, ArrayAccess, Countable
+class Zeal_Model_Association_Data_Collection extends Zeal_Model_Association_DataAbstract implements Zeal_Model_Association_Data_CollectionInterface, ArrayAccess, Countable
 {
     /**
      * Boolean to indicate whether or not the data has been loaded
@@ -16,6 +16,13 @@ class Zeal_Model_Association_Data_Collection implements Zeal_Model_Association_D
      * @var boolean
      */
     protected $_loaded = false;
+
+    /**
+     * The association
+     *
+     * @var Zeal_Model_AssociationInterface
+     */
+    protected $association;
 
     /**
      * Loaded objects
@@ -57,52 +64,6 @@ class Zeal_Model_Association_Data_Collection implements Zeal_Model_Association_D
         }
 
         return new ArrayIterator($this->_objects);
-    }
-
-    /**
-     * Sets an association
-     *
-     * @param Zeal_Model_AssociationInterface $association
-     * @return Zeal_Model_Association_Data_CollectionInterface
-     */
-    public function setAssociation(Zeal_Model_AssociationInterface $association)
-    {
-        $this->_association = $association;
-
-        return $this;
-    }
-
-    /**
-     * Returns the association
-     *
-     * @return Zeal_Model_AssociationInterface
-     */
-    public function getAssociation()
-    {
-        return $this->_association;
-    }
-
-    /**
-     * Populates the model that invoked this association
-     *
-     * @param object $model
-     * @return Zeal_Model_Association_Data_Collection
-     */
-    public function setModel($model)
-    {
-        $this->_model = $model;
-
-        return $this;
-    }
-
-    /**
-     * Returns the model that created the association
-     *
-     * @return object
-     */
-    public function getModel()
-    {
-        return $this->_model;
     }
 
     /**
@@ -267,6 +228,14 @@ class Zeal_Model_Association_Data_Collection implements Zeal_Model_Association_D
         $this->_query = $query;
 
         return $this;
+    }
+
+    public function __set($var, $value)
+    {
+    	var_dump($var);
+    	var_dump($value);
+    	var_Dump(debug_backtrace());
+    	exit;
     }
 
     /**

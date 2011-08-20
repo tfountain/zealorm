@@ -8,7 +8,7 @@
  * @license    New BSD License - http://tfountain.co.uk/license/new-bsd
  */
 
-class Zeal_Model_Association_Data implements Zeal_Model_Association_DataInterface
+class Zeal_Model_Association_Data extends Zeal_Model_Association_DataAbstract implements Zeal_Model_Association_DataInterface
 {
     /**
      * Boolean to indicate whether or not the data has been loaded
@@ -26,32 +26,11 @@ class Zeal_Model_Association_Data implements Zeal_Model_Association_DataInterfac
     protected $_loadRequired = true;
 
     /**
-     * The object created the association
-     *
-     * @var object
-     */
-    protected $_model;
-
-    /**
-     * The mapper
-     *
-     * @var Zeal_MapperInterface
-     */
-    protected $_mapper;
-
-    /**
      * A query object
      *
      * @var Zeal_Mapper_QueryInterface
      */
     protected $_query;
-
-    /**
-     * The association
-     *
-     * @var Zeal_Model_AssociationInterface
-     */
-    protected $_association;
 
     /**
      * Holds the loaded data
@@ -77,6 +56,10 @@ class Zeal_Model_Association_Data implements Zeal_Model_Association_DataInterfac
             $this->load();
         }
 
+        if (!$this->_object || !is_object($this->_object)) {
+        	throw new Zeal_Model_Exception("Unable to call function '$name' on the object for association '".$this->getAssociation()->getShortname()."' as no object exists");
+        }
+
         return $this->_object->$name($arguments);
     }
 
@@ -90,19 +73,6 @@ class Zeal_Model_Association_Data implements Zeal_Model_Association_DataInterfac
         }
 
         $this->_object->$var = $value;
-    }
-
-    /**
-     *
-     * @return Zeal_MapperInterface
-     */
-    public function getMapper()
-    {
-        if (!$this->_mapper) {
-            $this->_mapper = $this->getAssociation()->getMapper();
-        }
-
-        return $this->_mapper;
     }
 
     /**
@@ -189,52 +159,6 @@ class Zeal_Model_Association_Data implements Zeal_Model_Association_DataInterfac
     }
 
     /**
-     * Sets the association
-     *
-     * @param Zeal_Model_AssociationInterface $association
-     * @return Zeal_Model_Association_DataInterface
-     */
-    public function setAssociation(Zeal_Model_AssociationInterface $association)
-    {
-        $this->_association = $association;
-
-        return $this;
-    }
-
-    /**
-     * Returns the association
-     *
-     * @return Zeal_Model_AssociationInterface
-     */
-    public function getAssociation()
-    {
-        return $this->_association;
-    }
-
-    /**
-     * Sets the model
-     *
-     * @param object $model
-     * @return Zeal_Model_Association_DataInterface
-     */
-    public function setModel($model)
-    {
-        $this->_model = $model;
-
-        return $this;
-    }
-
-    /**
-     * Returns the model
-     *
-     * @return object
-     */
-    public function getModel()
-    {
-        return $this->_model;
-    }
-
-    /**
      * __toString magic method. Proxies to the object's __toString()
      * method if it has one. Otherwise returns null.
      *
@@ -289,7 +213,19 @@ class Zeal_Model_Association_Data implements Zeal_Model_Association_DataInterfac
      */
     public function create(array $data = array())
     {
-        $object = $this->build($data);
+    	if ($this->getObject()) {
+    		if ($data) {
+    			// what should happen here? TODO
+
+    		} else {
+    			$object = $this->_object;
+    		}
+    	} else if ($data) {
+			$object = $this->build($data);
+
+    	} else {
+
+    	}
 
         return $this->getMapper()->create($object);
     }

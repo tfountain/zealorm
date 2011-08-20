@@ -407,11 +407,19 @@ abstract class Zeal_MapperAbstract implements Zeal_MapperInterface
                             break;
 
                         case 'datetime':
-                            $data[$field] = new Zeal_Mapper_FieldType_DateTime($value);
+                        	if ($value instanceof Zeal_Mapper_FieldType_DateTime) {
+                        		$data[$field] = $value;
+                        	} else {
+                            	$data[$field] = new Zeal_Mapper_FieldType_DateTime($value);
+                        	}
                             break;
 
                         case 'date':
-                            $data[$field] = new Zeal_Mapper_FieldType_DateTime($value.' 12:00:00');
+                        	if ($value instanceof Zeal_Mapper_FieldType_DateTime) {
+                        		$data[$field] = $value;
+                        	} else {
+                        		$data[$field] = new Zeal_Mapper_FieldType_DateTime($value.' 12:00:00');
+                        	}
                             break;
                     }
                 }
@@ -625,7 +633,6 @@ abstract class Zeal_MapperAbstract implements Zeal_MapperInterface
         return $this->getAdapter()->create($object);
     }
 
-
     /**
      * Create an object, along with associated objects and callbacks
      *
@@ -720,6 +727,12 @@ abstract class Zeal_MapperAbstract implements Zeal_MapperInterface
         return $success;
     }
 
+    /**
+     * Deletes the supplied object
+     *
+     * @param $object
+     * @return boolean
+     */
     protected function _delete($object)
     {
         return $this->getAdapter()->delete($object);
