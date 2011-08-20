@@ -234,7 +234,7 @@ class Zeal_Mapper_Adapter_Zend_Db extends Zeal_Mapper_AdapterAbstract
         $query = $this->getMapper()->query();
         $query->where($this->getTableName().'.'.$this->getPrimaryKey().' = ?', $id);
 
-        return $this->fetchOne($query);
+        return $this->fetchObject($query);
     }
 
     /**

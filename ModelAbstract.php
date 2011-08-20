@@ -24,8 +24,8 @@ abstract class Zeal_ModelAbstract implements Zeal_ModelInterface
      */
     protected $associationData = array();
 
-    static protected $_availableBehaviours = array();
-    protected $_activeBehaviours = array();
+    static protected $availableBehaviours = array();
+    protected $activeBehaviours = array();
     protected $mappedBehaviourProperties = array();
     protected $mappedBehaviourMethods = array();
 
@@ -148,15 +148,23 @@ abstract class Zeal_ModelAbstract implements Zeal_ModelInterface
             }
 
             if (is_array($value)) {
-            	foreach ($value as $key => $data) {
-            		$this->associationData[$var]->$key = $data;
+            	if ($this->associationData[$var] instanceof Zeal_Model_Association_DataInterface) {
+					foreach ($value as $key => $data) {
+	            		$this->associationData[$var]->$key = $data;
+	            	}
+            	} else if ($this->associationData[$var] instanceof Zeal_Model_Association_Data_CollectionInterface) {
+            		// TODO
+            		throw new Zeal_Model_Exception('Mass-assigning collection data has not yet been implemented');
+
+            	} else {
+            		throw new Zeal_Model_Exception('Invalid model association data type: '.get_class($this->associationData[$var]));
             	}
 
             } else if ($value instanceof Valuation_Model_Address) {
             	$this->associationData[$var]->setObject($value);
 
             } else if (!is_null($value)) {
-            	throw new Zeal_Model_Exception('Invalid data passed as value for association \''.$var.'\'');
+            	throw new Zeal_Model_Exception('Invalid data ('.gettype($value).') passed as value for association \''.$var.'\'');
             }
 
         } else {
@@ -460,11 +468,11 @@ abstract class Zeal_ModelAbstract implements Zeal_ModelInterface
      */
     static public function registerBehaviour($behaviourShortname, $class)
     {
-        if (isset(self::$_availableBehaviours[$behaviourShortname])) {
+        if (isset(self::$availableBehaviours[$behaviourShortname])) {
             throw new Zeal_Model_Exception('A behaviour with the shortname \''.htmlspecialchars($behaviourShortname).'\' already exists');
         }
 
-        self::$_availableBehaviours[$behaviourShortname] = $class;
+        self::$availableBehaviours[$behaviourShortname] = $class;
     }
 
     /**
@@ -474,7 +482,7 @@ abstract class Zeal_ModelAbstract implements Zeal_ModelInterface
      */
     static public function unregisterAllBehaviours()
     {
-        self::$_availableBehaviours = array();
+        self::$availableBehaviours = array();
     }
 
 
@@ -487,11 +495,11 @@ abstract class Zeal_ModelAbstract implements Zeal_ModelInterface
      */
     public function actsAs($behaviourShortname, $options = null)
     {
-        if (!isset(self::$_availableBehaviours[$behaviourShortname])) {
+        if (!isset(self::$availableBehaviours[$behaviourShortname])) {
             throw new Zeal_Model_Exception('Invalid behaviour: '.htmlspecialchars($behaviourShortname).' defined in class \''.get_class($this).'\'');
         }
 
-        $behaviourClass = self::$_availableBehaviours[$behaviourShortname];
+        $behaviourClass = self::$availableBehaviours[$behaviourShortname];
         if (!class_exists($behaviourClass)) {
             throw new Zeal_Model_Exception('Invalid behaviour class: '.htmlspecialchars($behaviourClass));
         }
@@ -500,7 +508,7 @@ abstract class Zeal_ModelAbstract implements Zeal_ModelInterface
         $behaviour->setModel($this)
             ->init();
 
-        $this->_activeBehaviours[$behaviourShortname] = $behaviour;
+        $this->activeBehaviours[$behaviourShortname] = $behaviour;
     }
 
     /**
@@ -511,7 +519,7 @@ abstract class Zeal_ModelAbstract implements Zeal_ModelInterface
      */
     public function hasBehaviour($behaviourShortname)
     {
-        return isset($this->_activeBehaviours[$behaviourShortname]);
+        return isset($this->activeBehaviours[$behaviourShortname]);
     }
 
     /**
@@ -526,7 +534,7 @@ abstract class Zeal_ModelAbstract implements Zeal_ModelInterface
             return true;
         }
 
-        foreach ($this->_activeBehaviours as $behaviourShortname => $behaviourClass) {
+        foreach ($this->activeBehaviours as $behaviourShortname => $behaviourClass) {
             $properties = get_object_vars($behaviourClass);
 
             if (array_key_exists($var, $properties)) {
@@ -548,11 +556,11 @@ abstract class Zeal_ModelAbstract implements Zeal_ModelInterface
     {
         if (isset($this->mappedBehaviourProperties[$var])) {
             // make sure the behaviour has been initialised - triggers any behaviour specific loading etc.
-            if (!$this->_activeBehaviours[$this->mappedBehaviourProperties[$var]]->isLoaded()) {
-                $this->_activeBehaviours[$this->mappedBehaviourProperties[$var]]->load();
+            if (!$this->activeBehaviours[$this->mappedBehaviourProperties[$var]]->isLoaded()) {
+                $this->activeBehaviours[$this->mappedBehaviourProperties[$var]]->load();
             }
 
-            return $this->_activeBehaviours[$this->mappedBehaviourProperties[$var]]->$var;
+            return $this->activeBehaviours[$this->mappedBehaviourProperties[$var]]->$var;
         }
 
         throw new Zeal_Model_Exception('Invalid behaviour property \''.htmlspecialchars($var).'\'');
@@ -573,7 +581,7 @@ abstract class Zeal_ModelAbstract implements Zeal_ModelInterface
             return true;
         }
 
-        foreach ($this->_activeBehaviours as $behaviour => $behaviourClass) {
+        foreach ($this->activeBehaviours as $behaviour => $behaviourClass) {
             // check behaviour class methods
             if (in_array($name, get_class_methods($behaviourClass))) {
                 $this->mappedBehaviourMethods[$name] = $behaviour;
@@ -594,10 +602,10 @@ abstract class Zeal_ModelAbstract implements Zeal_ModelInterface
     protected function _callBehaviourMethod($name, $arguments)
     {
         // make sure the behaviour has been initialised - triggers any behaviour specific loading etc.
-        if (!$this->_activeBehaviours[$this->mappedBehaviourMethods[$name]]->isLoaded()) {
-            $this->_activeBehaviours[$this->mappedBehaviourMethods[$name]]->load();
+        if (!$this->activeBehaviours[$this->mappedBehaviourMethods[$name]]->isLoaded()) {
+            $this->activeBehaviours[$this->mappedBehaviourMethods[$name]]->load();
         }
 
-        return $this->_activeBehaviours[$this->mappedBehaviourMethods[$name]]->$name($arguments);
+        return $this->activeBehaviours[$this->mappedBehaviourMethods[$name]]->$name($arguments);
     }
 }
