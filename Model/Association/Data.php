@@ -11,21 +11,6 @@
 class Zeal_Model_Association_Data extends Zeal_Model_Association_DataAbstract implements Zeal_Model_Association_DataInterface
 {
     /**
-     * Boolean to indicate whether or not the data has been loaded
-     *
-     * @var boolean
-     */
-    protected $_loaded = false;
-
-    /**
-     * Boolean to indicate whether or not loading should be attempted, if has
-     * not been done already
-     *
-     * @var boolean
-     */
-    protected $_loadRequired = true;
-
-    /**
      * A query object
      *
      * @var Zeal_Mapper_QueryInterface
@@ -37,42 +22,42 @@ class Zeal_Model_Association_Data extends Zeal_Model_Association_DataAbstract im
      *
      * @var object
      */
-    protected $_object;
+    protected $object;
 
     protected $_data;
 
     public function __get($var)
     {
-        if (!$this->_loaded && $this->_loadRequired) {
+        if (!$this->loaded && $this->loadRequired) {
             $this->load();
         }
 
-        return isset($this->_object->$var) ? $this->_object->$var : null;
+        return isset($this->object->$var) ? $this->object->$var : null;
     }
 
     public function __call($name, $arguments)
     {
-        if (!$this->_loaded && $this->_loadRequired) {
+        if (!$this->loaded && $this->loadRequired) {
             $this->load();
         }
 
-        if (!$this->_object || !is_object($this->_object)) {
+        if (!$this->object || !is_object($this->object)) {
         	throw new Zeal_Model_Exception("Unable to call function '$name' on the object for association '".$this->getAssociation()->getShortname()."' as no object exists");
         }
 
-        return $this->_object->$name($arguments);
+        return $this->object->$name($arguments);
     }
 
     public function __set($var, $value)
     {
-        if (!$this->_object) {
+        if (!$this->object) {
         	$className = $this->getAssociation()->getClassName();
-        	$this->_object = new $className();
+        	$this->object = new $className();
 
-			$this->_loadRequired = false;
+			$this->loadRequired = false;
         }
 
-        $this->_object->$var = $value;
+        $this->object->$var = $value;
     }
 
     /**
@@ -96,11 +81,11 @@ class Zeal_Model_Association_Data extends Zeal_Model_Association_DataAbstract im
      */
     public function load()
     {
-        $this->_loaded = true;
+        $this->loaded = true;
 
-        $this->_object = $this->getMapper()->lazyLoadObject($this);
+        $this->object = $this->getMapper()->lazyLoadObject($this);
 
-        if ($this->_object && !is_object($this->_object)) {
+        if ($this->object && !is_object($this->object)) {
            throw new Zeal_Model_Exception('Data load method for association \''.$this->getAssociation()->getShortname().'\' must return either an object or false');
         }
     }
@@ -111,8 +96,10 @@ class Zeal_Model_Association_Data extends Zeal_Model_Association_DataAbstract im
      */
     public function clearCached()
     {
-        $this->_loaded = false;
-        $this->_object = null;
+        $this->loaded = false;
+        $this->loadRequired = true;
+
+        $this->object = null;
     }
 
     /**
@@ -123,7 +110,7 @@ class Zeal_Model_Association_Data extends Zeal_Model_Association_DataAbstract im
      */
     public function setObject($object)
     {
-        $this->_object = $object;
+        $this->object = $object;
 
         // prevent lazy loading, since we've populated the data manually
         $this->_loaded = true;
@@ -136,13 +123,13 @@ class Zeal_Model_Association_Data extends Zeal_Model_Association_DataAbstract im
      *
      * @return object
      */
-    public function getObject()
+    public function getObject($lazyLoad = true)
     {
-        if (!$this->_loaded && $this->_loadRequired) {
+        if ($lazyLoad && !$this->loaded && $this->loadRequired) {
             $this->load();
         }
 
-        return $this->_object;
+        return $this->object;
     }
 
     /**
@@ -175,8 +162,8 @@ class Zeal_Model_Association_Data extends Zeal_Model_Association_DataAbstract im
                 $this->load();
             }
 
-            if ($this->_object && method_exists($this->_object, '__toString')) {
-                return $this->_object->__toString();
+            if ($this->object && method_exists($this->object, '__toString')) {
+                return $this->object->__toString();
             }
 
         } catch (Exception $e) {
@@ -200,8 +187,8 @@ class Zeal_Model_Association_Data extends Zeal_Model_Association_DataAbstract im
         $object = $this->getMapper()->arrayToObject($data);
         $this->getAssociation()->populateObject($object);
 
-        $this->_object = $object;
-        $this->_loadRequired = false;
+        $this->object = $object;
+        $this->loadRequired = false;
 
         return $object;
     }
@@ -218,7 +205,7 @@ class Zeal_Model_Association_Data extends Zeal_Model_Association_DataAbstract im
     			// what should happen here? TODO
 
     		} else {
-    			$object = $this->_object;
+    			$object = $this->object;
     		}
     	} else if ($data) {
 			$object = $this->build($data);
