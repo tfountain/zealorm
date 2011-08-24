@@ -14,7 +14,7 @@ interface Zeal_Model_Association_Data_CollectionInterface extends IteratorAggreg
 
     public function clearCached();
 
-    public function getObjects();
+    public function getObjects($lazyLoad = true);
 
     public function getObjectIDs();
 

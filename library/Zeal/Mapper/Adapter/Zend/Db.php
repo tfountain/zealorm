@@ -245,7 +245,13 @@ class Zeal_Mapper_Adapter_Zend_Db extends Zeal_Mapper_AdapterAbstract
     {
         $query->limit(1);
 
-        return $this->getDb()->fetchRow($query);
+        try {
+        	$object = $this->getDb()->fetchRow($query);
+        } catch (Zend_Exception $e) {
+        	throw new Zeal_Mapper_Exception('Unable to load object of type \''.$this->getMapper()->getClassName().'\' in adapter');
+        }
+
+        return $object;
     }
 
     /**
@@ -254,7 +260,13 @@ class Zeal_Mapper_Adapter_Zend_Db extends Zeal_Mapper_AdapterAbstract
      */
     public function fetchAll(Zeal_Mapper_QueryInterface $query = null)
     {
-        return $this->getDb()->fetchAll($query);
+    	try {
+        	$objects = $this->getDb()->fetchAll($query);
+    	} catch (Zend_Exception $e) {
+    		throw new Zeal_Mapper_Exception('Unable to load objects of type \''.$this->getMapper()->getClassName().'\' in adapter');
+    	}
+
+    	return $objects;
     }
 
     /**

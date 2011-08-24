@@ -14,7 +14,7 @@ interface Zeal_Model_Association_DataInterface
 
     public function clearCached();
 
-    public function getObject();
+    public function getObject($lazyLoad = true);
 
     public function setObject($object);
 

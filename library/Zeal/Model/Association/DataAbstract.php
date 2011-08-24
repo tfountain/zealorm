@@ -39,6 +39,20 @@ abstract class Zeal_Model_Association_DataAbstract
     protected $association;
 
     /**
+     * Boolean to indicate whether or not lazy loading should be attempted
+     *
+     * @var boolean
+     */
+    protected $loadRequired = true;
+
+    /**
+     * Boolean to indicate whether or not lazy loading has been attempted
+     *
+     * @var boolean
+     */
+    protected $loaded = false;
+
+    /**
      *
      * @return Zeal_MapperInterface
      */

@@ -11,13 +11,6 @@
 class Zeal_Model_Association_Data_Collection extends Zeal_Model_Association_DataAbstract implements Zeal_Model_Association_Data_CollectionInterface, ArrayAccess, Countable
 {
     /**
-     * Boolean to indicate whether or not the data has been loaded
-     *
-     * @var boolean
-     */
-    protected $_loaded = false;
-
-    /**
      * The association
      *
      * @var Zeal_Model_AssociationInterface
@@ -29,14 +22,14 @@ class Zeal_Model_Association_Data_Collection extends Zeal_Model_Association_Data
      *
      * @var array
      */
-    protected $_objects = array();
+    protected $objects = array();
 
     /**
      * IDs of loaded objects
      *
      * @var array
      */
-    protected $_objectIDs = array();
+    protected $objectIDs = array();
 
     /**
      * A query object for this collection
@@ -59,11 +52,11 @@ class Zeal_Model_Association_Data_Collection extends Zeal_Model_Association_Data
      */
     public function getIterator()
     {
-        if (!$this->_loaded) {
+        if (!$this->loaded) {
             $this->load();
         }
 
-        return new ArrayIterator($this->_objects);
+        return new ArrayIterator($this->objects);
     }
 
     /**
@@ -83,19 +76,19 @@ class Zeal_Model_Association_Data_Collection extends Zeal_Model_Association_Data
      */
     public function load()
     {
-        if ($this->_loaded) {
+        if ($this->loaded) {
             throw new Zeal_Model_Exception('Attempted to load collection data multiple times');
         }
 
         // set the flag so loading isn't attempted more than once
-        $this->_loaded = true;
+        $this->loaded = true;
 
         // lazy load the objects and store
-        $this->_objects = $this->getMapper()->lazyLoadObjects($this);
+        $this->objects = $this->getMapper()->lazyLoadObjects($this);
 
         // ensure we got the right sort of data
-        if (!is_array($this->_objects)) {
-            throw new Zeal_Model_Exception('Lazy loading of collection objects must return an array, '.get_class($this->getMapper()).' returned '.gettype($this->_objects));
+        if (!is_array($this->objects)) {
+            throw new Zeal_Model_Exception('Lazy loading of collection objects must return an array, '.get_class($this->getMapper()).' returned '.gettype($this->objects));
         }
     }
 
@@ -105,8 +98,8 @@ class Zeal_Model_Association_Data_Collection extends Zeal_Model_Association_Data
      */
     public function clearCached()
     {
-        $this->_loaded = false;
-        $this->_objects = array();
+        $this->loaded = false;
+        $this->objects = array();
     }
 
     /**
@@ -117,10 +110,10 @@ class Zeal_Model_Association_Data_Collection extends Zeal_Model_Association_Data
      */
     public function setObjects($objects)
     {
-        $this->_objects = $objects;
+        $this->objects = $objects;
 
         // prevent lazy loading, since we've populated the data manually
-        $this->_loaded = true;
+        $this->loaded = true;
 
         return $this;
     }
@@ -128,30 +121,35 @@ class Zeal_Model_Association_Data_Collection extends Zeal_Model_Association_Data
     /**
      * Returns an array of objects loaded by this collection
      *
+     * @param boolean $lazyLoad
      * @return array
      */
-    public function getObjects()
+    public function getObjects($lazyLoad = true)
     {
-        if (!$this->_loaded) {
+    	if ($lazyLoad && !$this->loaded && $this->loadRequired) {
             $this->load();
         }
 
-        return $this->_objects;
+        return $this->objects;
     }
 
+    /**
+     * (non-PHPdoc)
+     * @see Model/Association/Data/Zeal_Model_Association_Data_CollectionInterface#getObjectIDs()
+     */
     public function getObjectIDs()
     {
-        if (!$this->_objectIDs) {
+        if (!$this->objectIDs) {
 	        if (!$this->_loaded) {
 	            $this->load();
 	        }
 
-	        foreach ($this->_objects as $object) {
+	        foreach ($this->objects as $object) {
 
 	        }
         }
 
-        return $this->_objectIDs;
+        return $this->objectIDs;
     }
 
     /**
@@ -293,14 +291,14 @@ class Zeal_Model_Association_Data_Collection extends Zeal_Model_Association_Data
      */
     public function offsetSet($offset, $value)
     {
-        if (!$this->_loaded) {
+    	if (!$this->loaded && $this->loadRequired) {
             $this->load();
         }
 
         if ($offset === null) {
-            $this->_objects[] = $value;
+            $this->objects[] = $value;
         } else {
-            $this->_objects[$offset] = $value;
+            $this->objects[$offset] = $value;
         }
     }
 
@@ -311,11 +309,11 @@ class Zeal_Model_Association_Data_Collection extends Zeal_Model_Association_Data
      */
     public function offsetExists($offset)
     {
-        if (!$this->_loaded) {
+    	if (!$this->loaded && $this->loadRequired) {
             $this->load();
         }
 
-        return isset($this->_objects[$offset]);
+        return isset($this->objects[$offset]);
     }
 
     /**
@@ -325,11 +323,11 @@ class Zeal_Model_Association_Data_Collection extends Zeal_Model_Association_Data
      */
     public function offsetUnset($offset)
     {
-        if (!$this->_loaded) {
+    	if (!$this->loaded && $this->loadRequired) {
             $this->load();
         }
 
-        unset($this->_objects[$offset]);
+        unset($this->objects[$offset]);
     }
 
     /**
@@ -339,11 +337,11 @@ class Zeal_Model_Association_Data_Collection extends Zeal_Model_Association_Data
      */
     public function offsetGet($offset)
     {
-        if (!$this->_loaded) {
+    	if (!$this->loaded && $this->loadRequired) {
             $this->load();
         }
 
-        return isset($this->_objects[$offset]) ? $this->_objects[$offset] : null;
+        return isset($this->objects[$offset]) ? $this->objects[$offset] : null;
     }
 
     /**
@@ -351,10 +349,10 @@ class Zeal_Model_Association_Data_Collection extends Zeal_Model_Association_Data
      */
     public function count()
     {
-        if (!$this->_loaded) {
+    	if (!$this->loaded && $this->loadRequired) {
             $this->load();
         }
 
-        return count($this->_objects);
+        return count($this->objects);
     }
 }
