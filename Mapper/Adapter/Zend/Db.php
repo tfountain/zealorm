@@ -248,7 +248,7 @@ class Zeal_Mapper_Adapter_Zend_Db extends Zeal_Mapper_AdapterAbstract
         try {
         	$object = $this->getDb()->fetchRow($query);
         } catch (Zend_Exception $e) {
-        	throw new Zeal_Mapper_Exception('Unable to load object of type \''.$this->getMapper()->getClassName().'\' in adapter');
+        	throw new Zeal_Mapper_Exception('Exception whilst loading object of type \''.$this->getMapper()->getClassName().'\' in adapter: '.$e->getMessage());
         }
 
         return $object;
@@ -263,7 +263,7 @@ class Zeal_Mapper_Adapter_Zend_Db extends Zeal_Mapper_AdapterAbstract
     	try {
         	$objects = $this->getDb()->fetchAll($query);
     	} catch (Zend_Exception $e) {
-    		throw new Zeal_Mapper_Exception('Unable to load objects of type \''.$this->getMapper()->getClassName().'\' in adapter');
+    		throw new Zeal_Mapper_Exception('Exception whilst loading objects of type \''.$this->getMapper()->getClassName().'\' in adapter: '.$e->getMessage());
     	}
 
     	return $objects;
@@ -455,10 +455,16 @@ class Zeal_Mapper_Adapter_Zend_Db extends Zeal_Mapper_AdapterAbstract
                 $associationForeignKey = $association->getOption('associationForeignKey', $this->getMapper()->getAdapter()->getPrimaryKey());
                 $associationKey = $association->getMapper()->getAdapter()->getPrimaryKey();
 
+                $value = $association->getModel()->{$foreignKey};
+
+                if (empty($value)) {
+                	return false;
+                }
+
                 $query = $association->getMapper()->query();
 
                 $query->joinInner($lookupTable, "$lookupTable.$associationForeignKey = $tableName.$associationKey", '')
-                    ->where("$lookupTable.$foreignKey = ?", $association->getModel()->{$foreignKey});
+                    ->where("$lookupTable.$foreignKey = ?", $value);
                 break;
         }
 
