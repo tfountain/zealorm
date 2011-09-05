@@ -113,7 +113,7 @@ class Zeal_Model_Association_Data extends Zeal_Model_Association_DataAbstract im
         $this->object = $object;
 
         // prevent lazy loading, since we've populated the data manually
-        $this->_loaded = true;
+        $this->loadRequired = false;
 
         return $this;
     }

@@ -231,7 +231,7 @@ abstract class Zeal_ModelAbstract implements Zeal_ModelInterface
 		// add the standard fields
 		$mapper = Zeal_Orm::getMapper($this);
 		$fields = $mapper->getFields();
-		foreach ($fields as $field) {
+		foreach ($fields as $field => $fieldType) {
 			if (property_exists($this, $field)) {
 				$sleepFields[] = $field;
 			}
