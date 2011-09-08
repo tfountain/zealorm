@@ -7,7 +7,7 @@ require_once 'library/Zeal/_files/AddressMapper.php';
 
 class Zeal_Mapper_Adapter_MongoDbTest extends PHPUnit_Framework_TestCase
 {
-    protected $_mongoDB;
+    protected $mongoDB;
 
     public function setUp()
     {
@@ -17,26 +17,32 @@ class Zeal_Mapper_Adapter_MongoDbTest extends PHPUnit_Framework_TestCase
 
         try {
             $mongo = new Mongo();
+            $this->mongoDB = $mongo->selectDB('zealtest');
+
         } catch (MongoConnectionException $e) {
             $this->markTestSkipped('Unable to connect to MongoDB');
         }
 
-        $this->_mongoDB = $mongo->selectDB('zealtest');
+        if (!$this->mongoDB) {
+            $this->markTestSkipped('Unable to select Mongo database zealtest');
+        }
 
         $this->_seedData();
 
-        Zeal_Mapper_Adapter_MongoDb::setDb($this->_mongoDB);
+        Zeal_Mapper_Adapter_MongoDb::setDb($this->mongoDB);
     }
 
     public function tearDown()
     {
-        $this->_mongoDB->drop();
+        if ($this->mongoDB) {
+            $this->mongoDB->drop();
+        }
     }
 
     protected function _seedData()
     {
-        $usersCollection = $this->_mongoDB->users;
-        $addressesCollection = $this->_mongoDB->addresses;
+        $usersCollection = $this->mongoDB->users;
+        $addressesCollection = $this->mongoDB->addresses;
 
         // add addresses
         $firstAddress = array(

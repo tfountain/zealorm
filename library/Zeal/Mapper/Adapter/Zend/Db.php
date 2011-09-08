@@ -425,7 +425,7 @@ class Zeal_Mapper_Adapter_Zend_Db extends Zeal_Mapper_AdapterAbstract
                 break;
 
             case Zeal_Model_AssociationInterface::HAS_MANY:
-                $key = $association->getModelMapper()->getAdapter()->getPrimaryKey();
+                $key = $association->getOption('primaryKey', $association->getModelMapper()->getAdapter()->getPrimaryKey());
                 $foreignKey = $association->getOption('foreignKey', $key);
                 $value = $association->getModel()->$key;
 
