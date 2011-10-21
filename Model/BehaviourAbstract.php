@@ -10,55 +10,95 @@
 
 abstract class Zeal_Model_BehaviourAbstract implements Zeal_Model_BehaviourInterface
 {
-    protected $_model;
-    protected $_loaded = false;
-    protected $_options;
+    protected $model;
+    protected $loaded = false;
 
+    /**
+     * Any options supplied to the tree by the model
+     *
+     * @var array|null
+     */
+    protected $options;
+
+    /**
+     * Constructor
+     *
+     * @param null|array $options
+     * @return void
+     */
     public function __construct(array $options = null)
     {
         if ($options) {
-            $this->_options = $options;
+            $this->options = $options;
         }
     }
 
+    /**
+     *
+     * @return void
+     */
     public function init()
     {
 
     }
 
+    /**
+     * Returns whether or not the behaviour has been loaded
+     *
+     * @return boolean
+     */
     public function isLoaded()
     {
-        return $this->_loaded;
+        return $this->loaded;
     }
 
     public function load()
     {
-        $this->_loaded = true;
+        $this->loaded = true;
     }
 
     public function setModel($model)
     {
-        $this->_model = $model;
+        $this->model = $model;
 
         return $this;
     }
 
     public function getModel()
     {
-        return $this->_model;
+        return $this->model;
     }
 
+    /**
+     * Returns the option with the specified key, if set; otherwise returns null.
+     *
+     * A default value can be provided as the second parameter to be returned instead
+     *
+     * @param string $key
+     * @param mixed $default
+     * @return mixed
+     */
     public function getOption($key, $default = null)
     {
-        if (array_key_exists($key, $this->_options)) {
-            return $this->_options[$key];
+        if (is_array($this->options) && array_key_exists($key, $this->options)) {
+            return $this->options[$key];
         } else {
             return $default;
         }
     }
 
+    /**
+     * Returns true if the tree was setup with the specified option
+     *
+     * @param string $key
+     * @return boolean
+     */
     public function hasOption($key)
     {
-        return array_key_exists($key, $this->_options);
+        if (is_array($this->options)) {
+            return array_key_exists($key, $this->options);
+        }
+
+        return false;
     }
 }
