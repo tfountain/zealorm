@@ -140,13 +140,19 @@ class Zeal_Model_Association_Data_Collection extends Zeal_Model_Association_Data
     public function getObjectIDs()
     {
         if (!$this->objectIDs) {
-	        if (!$this->_loaded) {
-	            $this->load();
-	        }
+            if (!$this->loaded) {
+                $this->load();
+            }
 
-	        foreach ($this->objects as $object) {
-
-	        }
+            // FIXME this is somewhat DB specific, not all adapters will have a primary key
+            $primaryKey = $this->getMapper()->getAdapter()->getPrimaryKey();
+            if ($primaryKey) {
+                foreach ($this->objects as $object) {
+                    $this->objectIDs[] = $object->$primaryKey;
+                }
+            } else {
+                throw new Zeal_Model_Exception('Unable to all getObjectIDs() on a collection without a primary key');
+            }
         }
 
         return $this->objectIDs;
