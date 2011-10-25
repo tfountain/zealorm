@@ -1,3 +1,2 @@
-git subtree split --prefix=library --annotate="(split)" -b library
 
-git subtree split --prefix=library/Zeal --annotate="(split)" -b libzeal
+git subtree split --prefix=library/Zeal --annotate="(split)" -b library
