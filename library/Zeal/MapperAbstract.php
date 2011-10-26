@@ -415,10 +415,10 @@ abstract class Zeal_MapperAbstract implements Zeal_MapperInterface
                             break;
 
                         case 'date':
-                        	if ($value instanceof Zeal_Mapper_FieldType_DateTime) {
+                        	if ($value instanceof Zeal_Mapper_FieldType_Date) {
                         		$data[$field] = $value;
                         	} else {
-                        		$data[$field] = new Zeal_Mapper_FieldType_DateTime($value.' 12:00:00');
+                        		$data[$field] = new Zeal_Mapper_FieldType_Date($value.' 12:00:00');
                         	}
                             break;
                     }
