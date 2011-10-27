@@ -71,7 +71,7 @@ abstract class Zeal_ModelAbstract implements Zeal_ModelInterface
                 throw new Zeal_Model_Exception('Unable to mass-assign guarded field \''.htmlspecialchars($key).'\'');
             }
 
-            $this->$key = $value;
+            $this->__set($key, $value);
         }
 
         return $this;
