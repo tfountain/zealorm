@@ -91,4 +91,16 @@ class Zeal_ModelAbstractTest extends PHPUnit_Framework_TestCase
 		$this->assertEquals('1 My Road', unserialize(serialize($user))->address->address1);
 	}
 
+	public function testAssociationStoresReferenceToModel()
+	{
+	    $user = new User();
+		$user->belongsTo('address', array(
+			'className' => 'Address'
+		));
+
+		$user->firstname = 'Joe';
+
+		$this->assertEquals('Joe', $user->getAssociation('address')->getModel()->firstname);
+	}
+
 }

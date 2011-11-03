@@ -299,9 +299,10 @@ abstract class Zeal_ModelAbstract implements Zeal_ModelInterface
     /**
      * Returns an array of data held by this model
      *
-     * @return array
-     */
-    public function toArray($includeUnsavedNestedData = false)
+	 * @param null|array $includeAssociations
+	 * @throws Zeal_Model_Exception
+	 */
+    public function toArray($includeAssociations = null)
     {
     	$mapper = Zeal_Orm::getMapper($this);
 		$fields = $mapper->getFields();
@@ -311,13 +312,18 @@ abstract class Zeal_ModelAbstract implements Zeal_ModelInterface
 			$data[$field] = isset($this->$field) ? $this->$field : null;
 		}
 
-		if ($includeUnsavedNestedData) {
-			foreach ($this->associationData as $associationData) {
-				if (true) { // TODO find a way to check if the data is saved or not
+		if ($includeAssociations) {
+		    if (!is_array($includeAssociations)) {
+		        throw new Zeal_Model_Exception('Invalid parameter supplied to Zeal_ModelAbstract::toArray()');
+		    }
+
+			foreach ($includeAssociations as $associationShortname => $nestedAssociations) {
+			    $associationData = $this->$associationShortname;
+                if ($associationData) {
 					if ($associationData instanceof Zeal_Model_Association_DataInterface) {
 						$object = $associationData->getObject(false);
 						if ($object) {
-							$data[$associationData->getAssociation()->getShortname()] = $object->toArray(true);
+							$data[$associationData->getAssociation()->getShortname()] = $object->toArray($nestedAssociations);
 						}
 					} else if ($associationData instanceof Zeal_Model_Association_Data_CollectionInterface) {
 						$objects = $associationData->getObjects();
@@ -325,7 +331,8 @@ abstract class Zeal_ModelAbstract implements Zeal_ModelInterface
 							$associationShortname = $associationData->getAssociation()->getShortname();
 							$data[$associationShortname] = array();
 							foreach ($objects as $object) {
-								$data[$associationShortname][] = $object->toArray(true);
+							    // FIXME
+								$data[$associationShortname][] = $object->toArray();
 							}
 						}
 					} else {

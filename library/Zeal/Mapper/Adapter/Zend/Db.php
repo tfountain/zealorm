@@ -481,4 +481,21 @@ class Zeal_Mapper_Adapter_Zend_Db extends Zeal_Mapper_AdapterAbstract
         return $query;
     }
 
+    /**
+     * (non-PHPdoc)
+     * @see Zeal_Mapper_AdapterInterface::requiresSave()
+     */
+    public function requiresSave($object)
+    {
+        $key = $this->getPrimaryKey();
+        $keyValue = $object->$key;
+        if (empty($keyValue)) {
+            return true;
+        }
+
+        // TODO handle objects that need updating
+
+        return false;
+    }
+
 }

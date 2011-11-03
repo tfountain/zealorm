@@ -15,7 +15,7 @@ class Zeal_Model_Association_BelongsTo extends Zeal_Model_AssociationAbstract
      *
      * @var integer
      */
-    protected $_type = Zeal_Model_AssociationInterface::BELONGS_TO;
+    protected $type = Zeal_Model_AssociationInterface::BELONGS_TO;
 
     /**
      * Initialises the association data object

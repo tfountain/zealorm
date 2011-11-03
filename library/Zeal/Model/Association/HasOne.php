@@ -15,7 +15,7 @@ class Zeal_Model_Association_HasOne extends Zeal_Model_AssociationAbstract
      *
      * @var integer
      */
-    protected $_type = Zeal_Model_AssociationInterface::HAS_ONE;
+    protected $type = Zeal_Model_AssociationInterface::HAS_ONE;
 
     /**
      * Initialises the association data object

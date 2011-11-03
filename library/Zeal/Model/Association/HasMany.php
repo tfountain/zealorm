@@ -15,7 +15,7 @@ class Zeal_Model_Association_HasMany extends Zeal_Model_AssociationAbstract
      *
      * @var integer
      */
-    protected $_type = Zeal_Model_AssociationInterface::HAS_MANY;
+    protected $type = Zeal_Model_AssociationInterface::HAS_MANY;
 
     /**
      * Initialises the association data collection object

@@ -15,7 +15,7 @@ class Zeal_Model_Association_HasAndBelongsToMany extends Zeal_Model_AssociationA
      *
      * @var integer
      */
-    protected $_type = Zeal_Model_AssociationInterface::HAS_AND_BELONGS_TO_MANY;
+    protected $type = Zeal_Model_AssociationInterface::HAS_AND_BELONGS_TO_MANY;
 
     /**
      * Initialises the association data collection object

@@ -113,4 +113,12 @@ interface Zeal_Mapper_AdapterInterface
      * @return Zeal_Mapper_QueryInterface
      */
     public function populateQueryForAssociation(Zeal_Mapper_QueryInterface $query, Zeal_Model_AssociationInterface $association);
+
+    /**
+     * Returns whether or not the supplied objects needs saving
+     *
+     * @param object $object
+     * @return boolean
+     */
+    public function requiresSave($object);
 }

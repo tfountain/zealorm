@@ -15,43 +15,43 @@ abstract class Zeal_Model_AssociationAbstract implements Zeal_Model_AssociationI
      *
      * @var Zeal_ModelInterface
      */
-    protected $_model;
+    protected $model;
 
     /**
      * The data mapper for the model that this association
      * was created by
      *
-     * @var unknown_type
+     * @var Zeal_MapperInterface
      */
-    protected $_modelMapper;
+    protected $modelMapper;
 
     /**
      * The shortname this association was created with
      *
      * @var string
      */
-    protected $_shortname;
+    protected $shortname;
 
     /**
      * Class that this association returns
      *
      * @var string
      */
-    protected $_className;
+    protected $className;
 
     /**
      * The data mapper for the target class
      *
      * @var Zeal_MapperInterface
      */
-    protected $_mapper;
+    protected $mapper;
 
     /**
      * Options passed in to the association
      *
      * @var unknown_type
      */
-    protected $_options = array();
+    protected $options = array();
 
     /**
      * Constructor
@@ -62,7 +62,7 @@ abstract class Zeal_Model_AssociationAbstract implements Zeal_Model_AssociationI
     public function __construct($options = null)
     {
         if ($options) {
-            $this->_options = $options;
+            $this->options = $options;
         }
     }
 
@@ -74,7 +74,7 @@ abstract class Zeal_Model_AssociationAbstract implements Zeal_Model_AssociationI
      */
     public function hasOption($key)
     {
-        return array_key_exists($key, $this->_options);
+        return array_key_exists($key, $this->options);
     }
 
     /**
@@ -86,8 +86,8 @@ abstract class Zeal_Model_AssociationAbstract implements Zeal_Model_AssociationI
      */
     public function getOption($key, $default = null)
     {
-        if (array_key_exists($key, $this->_options)) {
-            return $this->_options[$key];
+        if (array_key_exists($key, $this->options)) {
+            return $this->options[$key];
         } else {
             return $default;
         }
@@ -99,7 +99,7 @@ abstract class Zeal_Model_AssociationAbstract implements Zeal_Model_AssociationI
      */
     public function getOptions()
     {
-    	return $this->_options;
+    	return $this->options;
     }
 
     /**
@@ -110,7 +110,7 @@ abstract class Zeal_Model_AssociationAbstract implements Zeal_Model_AssociationI
      */
     public function getType()
     {
-        return $this->_type;
+        return $this->type;
     }
 
     /**
@@ -121,7 +121,7 @@ abstract class Zeal_Model_AssociationAbstract implements Zeal_Model_AssociationI
      */
     public function setModel(Zeal_ModelInterface $model)
     {
-        $this->_model = $model;
+        $this->model = $model;
 
         return $this;
     }
@@ -133,7 +133,7 @@ abstract class Zeal_Model_AssociationAbstract implements Zeal_Model_AssociationI
      */
     public function getModel()
     {
-        return $this->_model;
+        return $this->model;
     }
 
     /**
@@ -144,7 +144,7 @@ abstract class Zeal_Model_AssociationAbstract implements Zeal_Model_AssociationI
      */
     public function setShortname($shortname)
     {
-        $this->_shortname = $shortname;
+        $this->shortname = $shortname;
 
         return $this;
     }
@@ -156,7 +156,7 @@ abstract class Zeal_Model_AssociationAbstract implements Zeal_Model_AssociationI
      */
     public function getShortname()
     {
-        return $this->_shortname;
+        return $this->shortname;
     }
 
     /**
@@ -167,7 +167,7 @@ abstract class Zeal_Model_AssociationAbstract implements Zeal_Model_AssociationI
      */
     public function setClassName($className)
     {
-        $this->_className = $className;
+        $this->className = $className;
 
         return $this;
     }
@@ -179,7 +179,7 @@ abstract class Zeal_Model_AssociationAbstract implements Zeal_Model_AssociationI
      */
     public function getClassName()
     {
-        return $this->_className;
+        return $this->className;
     }
 
     /**
@@ -190,7 +190,7 @@ abstract class Zeal_Model_AssociationAbstract implements Zeal_Model_AssociationI
      */
     public function setMapper(Zeal_MapperInterface $mapper)
     {
-        $this->_mapper = $mapper;
+        $this->mapper = $mapper;
 
         return $this;
     }
@@ -202,9 +202,9 @@ abstract class Zeal_Model_AssociationAbstract implements Zeal_Model_AssociationI
      */
     public function getMapper()
     {
-        if (!$this->_mapper) {
+        if (!$this->mapper) {
             if ($this->hasOption('mapper')) {
-                $this->_mapper = $this->getOption('mapper');
+                $this->mapper = $this->getOption('mapper');
 
             } else {
 	            $className = $this->getClassName();
@@ -212,11 +212,11 @@ abstract class Zeal_Model_AssociationAbstract implements Zeal_Model_AssociationI
     	            throw new Zeal_Model_Exception('Unable to retrieve mapper for association \''.htmlspecialchars($className).'\' as the class name has not been set');
 	            }
 
-	            $this->_mapper = Zeal_Orm::getMapper($className);
+	            $this->mapper = Zeal_Orm::getMapper($className);
             }
         }
 
-        return $this->_mapper;
+        return $this->mapper;
     }
 
     /**
@@ -228,7 +228,7 @@ abstract class Zeal_Model_AssociationAbstract implements Zeal_Model_AssociationI
      */
     public function setModelMapper(Zeal_MapperInterface $mapper)
     {
-        $this->_modelMapper = $mapper;
+        $this->modelMapper = $mapper;
 
         return $this;
     }
@@ -241,15 +241,15 @@ abstract class Zeal_Model_AssociationAbstract implements Zeal_Model_AssociationI
      */
     public function getModelMapper()
     {
-        if (!$this->_modelMapper) {
-            if ($this->_model) {
-                $this->_modelMapper = Zeal_Orm::getMapper(get_class($this->_model));
+        if (!$this->modelMapper) {
+            if ($this->model) {
+                $this->modelMapper = Zeal_Orm::getMapper(get_class($this->model));
             } else {
-                throw new Zeal_Model_Exception('Unable to determine model mapper when Zeal_Model_AssociationAbstract::_model is not set');
+                throw new Zeal_Model_Exception('Unable to determine model mapper when Zeal_Model_AssociationAbstract::model is not set');
             }
         }
 
-        return $this->_modelMapper;
+        return $this->modelMapper;
     }
 
     /**

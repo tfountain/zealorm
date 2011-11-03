@@ -500,43 +500,46 @@ abstract class Zeal_MapperAbstract implements Zeal_MapperInterface
     }
 
     /**
-     * TODO
+     * Save any associated objects
      *
      * @param $object
      * @return boolean
      */
-    protected function _createAssociated($object)
+    protected function _saveAssociated($object)
     {
-        // TODO
-        return;
-        $nestableAssociations = $object->getNestableAssociations();
         $associations = $object->getAssociations();
+        $nestableAssociations = $object->getNestableAssociations();
         foreach ($associations as $association) {
-            if ($object->{$association->getShortname()}->getObject()) { // TODO requires creation
-                if (in_array($association, $nestableAssociations)) {
-                    // create the association data
-                    switch ($association->getType()) {
-                        case Zeal_Model_AssociationInterface::HAS_ONE:
-                        case Zeal_Model_AssociationInterface::BELONGS_TO:
-                            $object = $object->{$association->getShortname()}->getObject();
-                            $association->populateObject($object);
-                            $association->getMapper()->create($object);
-                            break;
-
-                        case Zeal_Model_AssociationInterface::HAS_MANY:
-                        case Zeal_Model_AssociationInterface::HAS_AND_BELONGS_TO_MANY:
-                            $objects = $object->{$association->getShortname()}->getObjects();
-                            foreach ($objects as $object) {
-                                // TODO - populate object
-                                $association->getMapper()->create($object);
-                            }
-                            break;
+            switch ($association->getType()) {
+                case Zeal_Model_AssociationInterface::HAS_ONE:
+                case Zeal_Model_AssociationInterface::BELONGS_TO:
+                    $associatedObject = $object->{$association->getShortname()}->getObject();
+                    if ($associatedObject && $association->getMapper()->getAdapter()->requiresSave($associatedObject)) {
+                        if (in_array($association, $nestableAssociations)) {
+                            $association->populateObject($associatedObject);
+                            $association->getMapper()->save($associatedObject);
+                        }  else {
+                            // data for an association that can't be saved!
+                            throw new Zeal_Mapper_Exception('Association \''.$association->getShortname().'\' contains data that requires saving but allow nested assignment is set to false');
+                        }
                     }
+                    break;
 
-                } else {
-                    // data for an association that can't be saved!
-                    throw new Zeal_Mapper_Exception('Association \''.$association->getShortname().'\' contains data that requires saving but allow nested assignment is set to false');
-                }
+                case Zeal_Model_AssociationInterface::HAS_MANY:
+                case Zeal_Model_AssociationInterface::HAS_AND_BELONGS_TO_MANY:
+                    $associatedObjects = $object->{$association->getShortname()}->getObjects();
+                    foreach ($associatedObjects as $associatedObject) {
+                        if ($association->getMapper()->getAdapter()->requiresSave($associatedObject)) {
+                            if (in_array($association, $nestableAssociations)) {
+                                $association->populateObject($associatedObject);
+                                $association->getMapper()->save($associatedObject);
+                            }  else {
+                                // data for an association that can't be saved!
+                                throw new Zeal_Mapper_Exception('Association \''.$association->getShortname().'\' contains data that requires saving but allow nested assignment is set to false');
+                            }
+                        }
+                    }
+                    break;
             }
         }
     }
@@ -646,9 +649,10 @@ abstract class Zeal_MapperAbstract implements Zeal_MapperInterface
 
             // create
             if ($this->_create($object)) {
-
-                // create any associated objects
-                $this->_createAssociated($object);
+                echo get_Class($object);
+                var_dump($object->contactID);
+                // create/update any associated objects
+                $this->_saveAssociated($object);
 
                 // postCreate, postSave callback
                 $this->_pluginCallback(array('postCreate', 'postSave'), $object);
