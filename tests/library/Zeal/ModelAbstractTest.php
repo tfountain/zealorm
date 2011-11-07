@@ -103,4 +103,12 @@ class Zeal_ModelAbstractTest extends PHPUnit_Framework_TestCase
 		$this->assertEquals('Joe', $user->getAssociation('address')->getModel()->firstname);
 	}
 
+	public function testModelStartsDirty()
+	{
+	    $user = new User();
+	    $user->firstname = 'John';
+
+	    $this->assertTrue($user->isDirty());
+	}
+
 }

@@ -205,55 +205,6 @@ abstract class Zeal_MapperAbstract implements Zeal_MapperInterface
     }
 
     /**
-     *
-     * @param $fieldType
-     * @param $closure
-     * @return void
-     */
-    static public function registerGlobalFieldType($fieldType, $closure)
-    {
-        if (isset(self::$_globalFieldTypes[$fieldType])) {
-            throw new Zeal_Mapper_Exception('Field type \''.htmlspecialchars($fieldType).'\' is already registered');
-        }
-
-        self::$_globalFieldTypes[$fieldType] = $closure;
-    }
-
-    /**
-     *
-     * @param $fieldType
-     * @param $closure
-     * @return void
-     */
-    public function registerFieldType($fieldType, $closure)
-    {
-        if (isset($this->_fieldTypes[$fieldType])) {
-            throw new Zeal_Mapper_Exception('Field type \''.htmlspecialchars($fieldType).'\' is already registered');
-        }
-
-        $this->_fieldTypes[$fieldType] = $closure;
-    }
-
-    /**
-     *
-     * @return array
-     */
-    public function getFieldTypes()
-    {
-        return self::$_globalFieldTypes + $this->_fieldTypes;
-    }
-
-    /**
-     *
-     * @return void
-     */
-    public function clearFieldTypes()
-    {
-        self::$_globalFieldTypes = array();
-        $this->_fieldTypes = array();
-    }
-
-    /**
      * Is the object cached?
      *
      * @param string $className
@@ -378,7 +329,7 @@ abstract class Zeal_MapperAbstract implements Zeal_MapperInterface
 
         $object = new $className();
         $fields = $this->getFields();
-        $fieldTypes = $this->getFieldTypes();
+        $fieldTypes = Zeal_Orm::getFieldTypes();
 
         foreach ($data as $field => $value) {
             if (isset($fields[$field])) {
@@ -428,6 +379,8 @@ abstract class Zeal_MapperAbstract implements Zeal_MapperInterface
 
         $object->populate($data, $guard);
 
+        $object->setDirty(false);
+
         return $object;
     }
 
@@ -465,7 +418,7 @@ abstract class Zeal_MapperAbstract implements Zeal_MapperInterface
         // start with the raw data from the object
         $data = array_intersect_key($object->toArray(), $fields);
 
-        $fieldTypes = $this->getFieldTypes();
+        $fieldTypes = Zeal_Orm::getFieldTypes();
 
         foreach ($fields as $field => $fieldType) {
             if (array_key_exists($field, $data)) {
@@ -514,7 +467,7 @@ abstract class Zeal_MapperAbstract implements Zeal_MapperInterface
                 case Zeal_Model_AssociationInterface::HAS_ONE:
                 case Zeal_Model_AssociationInterface::BELONGS_TO:
                     $associatedObject = $object->{$association->getShortname()}->getObject();
-                    if ($associatedObject && $association->getMapper()->getAdapter()->requiresSave($associatedObject)) {
+                    if ($associatedObject && $associatedObject->isDirty()) {
                         if (in_array($association, $nestableAssociations)) {
                             $association->populateObject($associatedObject);
                             $association->getMapper()->save($associatedObject);
@@ -529,7 +482,7 @@ abstract class Zeal_MapperAbstract implements Zeal_MapperInterface
                 case Zeal_Model_AssociationInterface::HAS_AND_BELONGS_TO_MANY:
                     $associatedObjects = $object->{$association->getShortname()}->getObjects();
                     foreach ($associatedObjects as $associatedObject) {
-                        if ($association->getMapper()->getAdapter()->requiresSave($associatedObject)) {
+                        if ($associatedObject->isDirty()) {
                             if (in_array($association, $nestableAssociations)) {
                                 $association->populateObject($associatedObject);
                                 $association->getMapper()->save($associatedObject);
@@ -649,8 +602,6 @@ abstract class Zeal_MapperAbstract implements Zeal_MapperInterface
 
             // create
             if ($this->_create($object)) {
-                echo get_Class($object);
-                var_dump($object->contactID);
                 // create/update any associated objects
                 $this->_saveAssociated($object);
 
@@ -690,12 +641,17 @@ abstract class Zeal_MapperAbstract implements Zeal_MapperInterface
         // preSave callback
         $this->_pluginCallback(array('preSave', 'preUpdate'), $object);
 
-        $success = $this->_update($object);
+        if ($this->_update($object)) {
+            // create/update any associated objects
+            $this->_saveAssociated($object);
 
-        // postSave callback
-        $this->_pluginCallback(array('postSave', 'postUpdate'), $object);
+            // postSave callback
+            $this->_pluginCallback(array('postSave', 'postUpdate'), $object);
 
-        return $success;
+            return true;
+        }
+
+        return false;
     }
 
     /**
@@ -723,12 +679,17 @@ abstract class Zeal_MapperAbstract implements Zeal_MapperInterface
         // preSave callback
         $this->_pluginCallback('preSave', $object);
 
-        $success = $this->_save($object);
+        if ($this->_save($object)) {
+            // create/update any associated objects
+            $this->_saveAssociated($object);
 
-        // postSave callback
-        $this->_pluginCallback('postSave', $object);
+            // postSave callback
+            $this->_pluginCallback('postSave', $object);
 
-        return $success;
+            return true;
+        }
+
+        return false;
     }
 
     /**

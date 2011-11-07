@@ -10,7 +10,15 @@
 
 class Zeal_Orm
 {
-    protected static $_mapperRegistry;
+    /**
+    * @var Zeal_Mapper_Registry
+     */
+    protected static $mapperRegistry;
+
+    /**
+     * @var array
+     */
+    protected static $fieldTypes = array();
 
     /**
      * Returns the mapper registry instance
@@ -19,11 +27,11 @@ class Zeal_Orm
      */
     static public function getMapperRegistry()
     {
-        if (!self::$_mapperRegistry) {
-            self::$_mapperRegistry = new Zeal_Mapper_Registry();
+        if (!self::$mapperRegistry) {
+            self::$mapperRegistry = new Zeal_Mapper_Registry();
         }
 
-        return self::$_mapperRegistry;
+        return self::$mapperRegistry;
     }
 
     /**
@@ -37,11 +45,11 @@ class Zeal_Orm
      */
     static public function getMapper($class)
     {
-        if (!self::$_mapperRegistry) {
-            self::$_mapperRegistry = new Zeal_Mapper_Registry();
+        if (!self::$mapperRegistry) {
+            self::$mapperRegistry = new Zeal_Mapper_Registry();
         }
 
-        return self::$_mapperRegistry->getMapper($class);
+        return self::$mapperRegistry->getMapper($class);
     }
 
     /**
@@ -53,5 +61,29 @@ class Zeal_Orm
     static public function getPublicProperties($object)
     {
     	return array_keys(get_object_vars($object));
+    }
+
+    /**
+     *
+     * @param $fieldType
+     * @param $closure
+     * @return void
+     */
+    static public function registerFieldType($fieldType, $closure)
+    {
+        if (isset(self::$fieldTypes[$fieldType])) {
+            throw new Zeal_Exception('Field type \''.htmlspecialchars($fieldType).'\' is already registered');
+        }
+
+        self::$fieldTypes[$fieldType] = $closure;
+    }
+
+    /**
+     *
+     * @return array
+     */
+    static public function getFieldTypes()
+    {
+        return self::$fieldTypes;
     }
 }
