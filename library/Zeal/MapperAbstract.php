@@ -461,28 +461,14 @@ abstract class Zeal_MapperAbstract implements Zeal_MapperInterface
     protected function _saveAssociated($object)
     {
         $associations = $object->getAssociations();
-        $nestableAssociations = $object->getNestableAssociations();
-        foreach ($associations as $association) {
-            switch ($association->getType()) {
-                case Zeal_Model_AssociationInterface::HAS_ONE:
-                case Zeal_Model_AssociationInterface::BELONGS_TO:
-                    $associatedObject = $object->{$association->getShortname()}->getObject();
-                    if ($associatedObject && $associatedObject->isDirty()) {
-                        if (in_array($association, $nestableAssociations)) {
-                            $association->populateObject($associatedObject);
-                            $association->getMapper()->save($associatedObject);
-                        }  else {
-                            // data for an association that can't be saved!
-                            throw new Zeal_Mapper_Exception('Association \''.$association->getShortname().'\' contains data that requires saving but allow nested assignment is set to false');
-                        }
-                    }
-                    break;
-
-                case Zeal_Model_AssociationInterface::HAS_MANY:
-                case Zeal_Model_AssociationInterface::HAS_AND_BELONGS_TO_MANY:
-                    $associatedObjects = $object->{$association->getShortname()}->getObjects();
-                    foreach ($associatedObjects as $associatedObject) {
-                        if ($associatedObject->isDirty()) {
+        if ($associations) {
+            $nestableAssociations = $object->getNestableAssociations();
+            foreach ($associations as $association) {
+                switch ($association->getType()) {
+                    case Zeal_Model_AssociationInterface::HAS_ONE:
+                    case Zeal_Model_AssociationInterface::BELONGS_TO:
+                        $associatedObject = $object->{$association->getShortname()}->getObject();
+                        if ($associatedObject && $associatedObject->isDirty()) {
                             if (in_array($association, $nestableAssociations)) {
                                 $association->populateObject($associatedObject);
                                 $association->getMapper()->save($associatedObject);
@@ -491,8 +477,24 @@ abstract class Zeal_MapperAbstract implements Zeal_MapperInterface
                                 throw new Zeal_Mapper_Exception('Association \''.$association->getShortname().'\' contains data that requires saving but allow nested assignment is set to false');
                             }
                         }
-                    }
-                    break;
+                        break;
+
+                    case Zeal_Model_AssociationInterface::HAS_MANY:
+                    case Zeal_Model_AssociationInterface::HAS_AND_BELONGS_TO_MANY:
+                        $associatedObjects = $object->{$association->getShortname()}->getObjects();
+                        foreach ($associatedObjects as $associatedObject) {
+                            if ($associatedObject->isDirty()) {
+                                if (in_array($association, $nestableAssociations)) {
+                                    $association->populateObject($associatedObject);
+                                    $association->getMapper()->save($associatedObject);
+                                }  else {
+                                    // data for an association that can't be saved!
+                                    throw new Zeal_Mapper_Exception('Association \''.$association->getShortname().'\' contains data that requires saving but allow nested assignment is set to false');
+                                }
+                            }
+                        }
+                        break;
+                }
             }
         }
     }

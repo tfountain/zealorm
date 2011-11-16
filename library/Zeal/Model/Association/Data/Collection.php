@@ -192,6 +192,12 @@ class Zeal_Model_Association_Data_Collection extends Zeal_Model_Association_Data
         $object = $this->getMapper()->arrayToObject($data);
         $this->getAssociation()->populateObject($object);
 
+        if (!$this->loaded && $this->loadRequired) {
+            $this->load();
+        }
+
+        $this->objects[] = $object;
+
         return $object;
     }
 
@@ -204,7 +210,17 @@ class Zeal_Model_Association_Data_Collection extends Zeal_Model_Association_Data
     {
         $object = $this->build($data);
 
-        return $this->getMapper()->create($object);
+        if ($this->getMapper()->create($object)) {
+            if (!$this->loaded && $this->loadRequired) {
+                $this->load();
+            }
+
+            $this->objects[] = $object;
+
+            return true;
+        }
+
+        return false;
     }
 
     /**

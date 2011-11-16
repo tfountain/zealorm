@@ -521,9 +521,11 @@ abstract class Zeal_ModelAbstract implements Zeal_ModelInterface
     public function getNestableAssociations()
     {
         $nestable = array();
-        foreach ($this->getAssociations() as $association) {
-            if ($association->hasOption('allowNestedAssignment') && $association->getOption('allowNestedAssignment') === true) {
-                $nestable[] = $association;
+        if ($this->getAssociations()) {
+            foreach ($this->getAssociations() as $association) {
+                if ($association->hasOption('allowNestedAssignment') && $association->getOption('allowNestedAssignment') === true) {
+                    $nestable[] = $association;
+                }
             }
         }
 
