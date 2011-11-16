@@ -111,4 +111,19 @@ class Zeal_ModelAbstractTest extends PHPUnit_Framework_TestCase
 	    $this->assertTrue($user->isDirty());
 	}
 
+	public function testChangingDataMakesModelDirty()
+	{
+		$user = new User();
+		$user->firstname = 'Joe';
+		$user->surname = 'Bloggs';
+
+		$user->setDirty(false);
+
+		$this->assertFalse($user->isDirty());
+
+		$user->firstName = 'Bob';
+
+		$this->assertTrue($user->isDirty());
+	}
+
 }
