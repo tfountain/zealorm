@@ -188,7 +188,7 @@ class Zeal_Mapper_Adapter_Zend_Db extends Zeal_Mapper_AdapterAbstract
      */
     public function setPrimaryKey($primaryKey)
     {
-        $this->_priaryKey = $primaryKey;
+        $this->_primaryKey = $primaryKey;
 
         return $this;
     }
