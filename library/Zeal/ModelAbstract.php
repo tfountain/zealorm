@@ -622,7 +622,7 @@ abstract class Zeal_ModelAbstract implements Zeal_ModelInterface
      */
     public function hasBehaviour($behaviourShortname)
     {
-        return isset($this->activeBehaviours[$behaviourShortname]);
+        return $this->activeBehaviours && isset($this->activeBehaviours[$behaviourShortname]);
     }
 
     /**
@@ -690,11 +690,13 @@ abstract class Zeal_ModelAbstract implements Zeal_ModelInterface
             return true;
         }
 
-        foreach ($this->activeBehaviours as $behaviour => $behaviourClass) {
-            // check behaviour class methods
-            if (in_array($name, get_class_methods($behaviourClass))) {
-                $this->mappedBehaviourMethods[$name] = $behaviour;
-                return true;
+        if ($this->activeBehaviours) {
+            foreach ($this->activeBehaviours as $behaviour => $behaviourClass) {
+                // check behaviour class methods
+                if (in_array($name, get_class_methods($behaviourClass))) {
+                    $this->mappedBehaviourMethods[$name] = $behaviour;
+                    return true;
+                }
             }
         }
 
