@@ -100,6 +100,8 @@ class Zeal_Model_Association_Data_Collection extends Zeal_Model_Association_Data
     {
         $this->loaded = false;
         $this->objects = array();
+
+        return $this;
     }
 
     /**
@@ -296,12 +298,13 @@ class Zeal_Model_Association_Data_Collection extends Zeal_Model_Association_Data
      * @param string $where
      * @return Zeal_Model_Association_Data_CollectionInterface
      */
-    public function where($where)
+    public function where($where, $params = null)
     {
         $collection = new self();
-        $collection->setModel($this->getModel())
+        $collection->clearCached()
+                   ->setModel($this->getModel())
                    ->setAssociation($this->getAssociation())
-                   ->setQuery($this->query()->where($where));
+                   ->setQuery($this->query()->where($where, $params));
 
         return $collection;
     }
