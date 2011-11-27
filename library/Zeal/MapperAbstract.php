@@ -467,15 +467,23 @@ abstract class Zeal_MapperAbstract implements Zeal_MapperInterface
                 switch ($association->getType()) {
                     case Zeal_Model_AssociationInterface::HAS_ONE:
                     case Zeal_Model_AssociationInterface::BELONGS_TO:
-                        $associatedObject = $object->{$association->getShortname()}->getObject();
-                        if ($associatedObject && $associatedObject->isDirty()) {
-                            if (in_array($association, $nestableAssociations)) {
-                                $association->populateObject($associatedObject);
-                                $association->getMapper()->save($associatedObject);
-                            }  else {
-                                // data for an association that can't be saved!
-                                throw new Zeal_Mapper_Exception('Association \''.$association->getShortname().'\' contains data that requires saving but allow nested assignment is set to false');
+                        $associationData = $object->{$association->getShortname()};
+                        if ($associationData instanceof Zeal_Model_Association_DataInterface) {
+                            $associatedObject = $associationData->getObject();
+                            if ($associatedObject && $associatedObject->isDirty()) {
+                                if (in_array($association, $nestableAssociations)) {
+                                    $association->populateObject($associatedObject);
+                                    $association->getMapper()->save($associatedObject);
+                                }  else {
+                                    // data for an association that can't be saved!
+                                    throw new Zeal_Mapper_Exception('Association \''.$association->getShortname().'\' contains data that requires saving but allow nested assignment is set to false');
+                                }
                             }
+                        } else {
+                            // something has been put in the variable that is not an association data object
+                            echo 'oh noes:';
+                            var_Dump($associationData);
+                            throw new Zeal_Mapper_Exception('Found something other than an association data object in '.get_class($this).'->'.$association->getShortname());
                         }
                         break;
 

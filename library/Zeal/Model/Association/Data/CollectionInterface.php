@@ -20,7 +20,7 @@ interface Zeal_Model_Association_Data_CollectionInterface extends IteratorAggreg
 
     public function setObjects($objects);
 
-    public function setData($data);
+    public function populate($data);
 
     public function build(array $data = array());
 

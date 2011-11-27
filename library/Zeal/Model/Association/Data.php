@@ -24,7 +24,6 @@ class Zeal_Model_Association_Data extends Zeal_Model_Association_DataAbstract im
      */
     protected $object;
 
-    protected $_data;
 
     public function __get($var)
     {
@@ -133,19 +132,6 @@ class Zeal_Model_Association_Data extends Zeal_Model_Association_DataAbstract im
     }
 
     /**
-     * Set data
-     *
-     * @param $data
-     * @return Zeal_Model_Association_DataInterface
-     */
-    public function setData($data)
-    {
-        $this->_data = $data;
-
-        return $this;
-    }
-
-    /**
      * __toString magic method. Proxies to the object's __toString()
      * method if it has one. Otherwise returns null.
      *
@@ -178,6 +164,27 @@ class Zeal_Model_Association_Data extends Zeal_Model_Association_DataAbstract im
 
     /**
      *
+     * @param mixed $data
+     * @return void
+     */
+    public function populate($data)
+    {
+        $className = $this->getAssociation()->getClassName();
+
+        if (is_array($data)) {
+            return $this->build($data);
+
+        } else if ($data instanceof $className) {
+            $data->setDirty(true);
+            $this->setObject($data);
+
+        } else if (!is_null($data)) {
+            throw new Zeal_Model_Exception('Invalid data ('.gettype($data).') passed as value for association \''.$this->getAssociation()->getShortname().'\'');
+        }
+    }
+
+    /**
+     *
      * @param array $data
      * @return object
      */
@@ -185,6 +192,7 @@ class Zeal_Model_Association_Data extends Zeal_Model_Association_DataAbstract im
     {
         $className = $this->getAssociation()->getClassName();
         $object = $this->getMapper()->arrayToObject($data);
+        $object->setDirty(true);
         $this->getAssociation()->populateObject($object);
 
         $this->object = $object;

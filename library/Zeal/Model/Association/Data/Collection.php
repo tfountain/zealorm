@@ -39,13 +39,6 @@ class Zeal_Model_Association_Data_Collection extends Zeal_Model_Association_Data
     protected $_query;
 
     /**
-     *
-     *
-     * @var mixed
-     */
-    protected $_data;
-
-    /**
      * Returns the objects for use by IteratorAggregate
      *
      * @return array
@@ -84,7 +77,19 @@ class Zeal_Model_Association_Data_Collection extends Zeal_Model_Association_Data
         $this->loaded = true;
 
         // lazy load the objects and store
-        $this->objects = $this->getMapper()->lazyLoadObjects($this);
+        if ($this->objectIDs) {
+            // we already know the IDs of the objects so just load those
+            // FIXME - this may avoid some of the overriding at the mapper level so needs refactoring
+            $query = $this->getMapper()->query();
+            foreach ($this->objectIDs as $id) {
+                $query->orWhere($this->getMapper()->getAdapter()->getPrimaryKey().' = ?', $id);
+            }
+            $this->objects = $this->getMapper()->fetchAll($query);
+
+        } else {
+            // delegate back to the mapper
+            $this->objects = $this->getMapper()->lazyLoadObjects($this);
+        }
 
         // ensure we got the right sort of data
         if (!is_array($this->objects)) {
@@ -161,29 +166,52 @@ class Zeal_Model_Association_Data_Collection extends Zeal_Model_Association_Data
     }
 
     /**
-     * Set data
-     *
      * @param mixed $data
-     * @return Zeal_Model_Association_Data_Collection
+     * @throws Zeal_Model_Exception
+     * @return object
      */
-    public function setData($data)
+    public function populate($data)
     {
-        $this->_data = $data;
+        $className = $this->getAssociation()->getClassName();
 
-        return $this;
+        if (is_array($data)) {
+            if (count($data) > 0) {
+                if (is_object($data[0])) {
+                    if (!($data[0] instanceof $className)) {
+                        $this->setObjects($data);
+                    } else {
+                        throw new Zeal_Model_Exception('Objects passed to association \''.$this->getAssociation()->getShortname().'\' must be instances of '.$className);
+                    }
+
+                } else if (is_array($data[0])) {
+                    foreach ($data as $row) {
+                        $this->build($row);
+                    }
+
+                } else if (is_numeric($data[0]) && ($this->getAssociation() instanceof Zeal_Model_Association_HasAndBelongsToMany)) {
+                    // ID for a HABTM association - for now we just load the objects TODO
+                    /*foreach ($data as $id) {
+                        $object = $this->getMapper()->find($id);
+                        if ($object) {
+                            $this->objects[] = $object;
+                            $this->objectIDs[] = $id;
+                        } else {
+                            // error?
+                        }
+                    }*/
+                    $this->objectIDs = $data;
+
+                } else {
+                    throw new Zeal_Model_Exception('Invalid data in assignment to data collection');
+                }
+            }
+
+        } else if (!is_null($data)) {
+            throw new Zeal_Model_Exception('Invalid data ('.gettype($data).') passed as value for association \''.$this->getAssociation()->getShortname().'\'');
+        }
     }
 
-    /**
-     * Returns the data this collection was populated with
-     *
-     * @return mixed
-     */
-    public function getData()
-    {
-        return $this->_data;
-    }
-
-   /**
+   /**2
      *
      * @param array $data
      * @return object

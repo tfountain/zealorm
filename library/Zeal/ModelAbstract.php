@@ -8,7 +8,7 @@
  * @license    New BSD License - http://tfountain.co.uk/license/new-bsd
  */
 
-abstract class Zeal_ModelAbstract implements Zeal_ModelInterface
+abstract class Zeal_ModelAbstract implements Zeal_ModelInterface, Serializable
 {
     /**
      * An array of association objects
@@ -89,6 +89,8 @@ abstract class Zeal_ModelAbstract implements Zeal_ModelInterface
      */
     public function populate(array $data, $guard = true)
     {
+        $this->setDirty(true);
+
         foreach ($data as $key => $value) {
             if ($guard && $this->_isGuarded($key)) {
                 throw new Zeal_Model_Exception('Unable to mass-assign guarded field \''.htmlspecialchars($key).'\'');
@@ -131,6 +133,16 @@ abstract class Zeal_ModelAbstract implements Zeal_ModelInterface
             return $this->$getMethodName();
 
         } else if (isset($this->$var) || property_exists($this, $var)) {
+            // init the association if that's what is
+            if ($this->isAssociation($var)) {
+                $this->_initAssociationData($var);
+
+                if (isset($this->$var)) {
+                    echo 'huh?';exit;
+                }
+
+            }
+
             // return the value
             return $this->$var;
 
@@ -163,48 +175,9 @@ abstract class Zeal_ModelAbstract implements Zeal_ModelInterface
             return $this->$setMethodName($value);
 
         } else if ($this->isAssociation($var)) {
-            if (!isset($this->associationData[$var])) {
-                // create data set
-                $associationData = $this->associations[$var]->initAssociationData();
+            $this->_initAssociationData($var);
 
-                // populate stuff it might need
-                $associationData->setAssociation($this->associations[$var])
-                                ->setModel($this);
-
-                $this->associationData[$var] = $associationData;
-            }
-
-            if (is_array($value)) {
-            	if ($this->associationData[$var] instanceof Zeal_Model_Association_DataInterface) {
-					foreach ($value as $key => $data) {
-	            		$this->associationData[$var]->$key = $data;
-	            	}
-            	} else if ($this->associationData[$var] instanceof Zeal_Model_Association_Data_CollectionInterface) {
-            		if (is_array($value) && count($value) > 0) {
-            			if (is_object($value[0])) {
-            				$this->associationData[$var]->setObjects($value);
-            			} else if (is_array($value[0])) {
-            				$objects = array();
-            				foreach ($value as $data) {
-            					$objects[] = $this->associationData[$var]->build($data);
-            				}
-            				$this->associationData[$var]->setObjects($objects);
-
-            			} else {
-            				throw new Zeal_Model_Exception('Invalid data in assignment to data collection');
-            			}
-            		}
-
-            	} else {
-            		throw new Zeal_Model_Exception('Invalid model association data type: '.get_class($this->associationData[$var]));
-            	}
-
-            } else if ($value instanceof Valuation_Model_Address) {
-            	$this->associationData[$var]->setObject($value);
-
-            } else if (!is_null($value)) {
-            	throw new Zeal_Model_Exception('Invalid data ('.gettype($value).') passed as value for association \''.$var.'\'');
-            }
+            $this->associationData[$var]->populate($value);
 
         } else {
             if (!$this->dirty) {
@@ -253,80 +226,83 @@ abstract class Zeal_ModelAbstract implements Zeal_ModelInterface
 
     /**
      *
-     * @return unknown_type
+     *
      */
-	public function __sleep()
-	{
-		$sleepFields = array();
+    public function getUnsavedAssociationData()
+    {
+        $unsavedAssociationData = array();
 
-		// add the standard fields
-		$mapper = Zeal_Orm::getMapper($this);
-		$fields = $mapper->getFields();
-		foreach ($fields as $field => $fieldType) {
-			if (property_exists($this, $field)) {
-				$sleepFields[] = $field;
-			}
-		}
+        if ($this->associationData) {
+            foreach ($this->associationData as $associationData) {
+                $associationShortname = $associationData->getAssociation()->getShortname();
+
+                if ($associationData instanceof Zeal_Model_Association_DataInterface) {
+                    $object = $associationData->getObject();
+                    if ($object && $object->isDirty()) {
+                        $data = $object->toArray();
+                        $data = array_merge($data, $object->getUnsavedAssociationData());
+
+                        $unsavedAssociationData[$associationShortname] = $data;
+                    }
+
+                } else if ($associationData->getAssociation() instanceof Zeal_Model_Association_HasAndBelongsToMany) {
+                    $unsavedAssociationData[$associationShortname] = $associationData->getObjectIDs();
+
+                } else if ($associationData instanceof Zeal_Model_Association_Data_CollectionInterface) {
+                    $objects = $associationData->getObjects();
+                    if ($objects) {
+                        $unsavedAssociationData[$associationShortname] = array();
+                        foreach ($objects as $object) {
+                            $data = $object->toArray();
+                            $data = array_merge($data, $object->getUnsavedAssociationData());
+
+                            $unsavedAssociationData[$associationShortname][] = $data;
+                        }
+                    }
+                }
+            }
+        }
+
+        return $unsavedAssociationData;
+    }
+
+    /**
+     * Part of Serializable. Returns a serialized form of the model.
+     *
+     * @return string
+     */
+	public function serialize()
+	{
+	    // start with the object data
+		$data = $this->toArray();
 
 		// add any public properties
-		$sleepFields = array_merge($sleepFields, Zeal_Orm::getPublicProperties($this));
-
-		// add any unsaved association data objects
-		if ($this->associationData) {
-    		foreach ($this->associationData as $associationData) {
-    			if (true) { // TODO find a way to check if the data is saved or not
-    				if ($associationData instanceof Zeal_Model_Association_DataInterface) {
-    					$object = $associationData->getObject();
-    					if ($object) {
-    						$this->unsavedAssociationData[$associationData->getAssociation()->getShortname()] = $object->toArray();
-    						$sleepFields[] = 'unsavedAssociationData';
-    					}
-    				} else if ($associationData instanceof Zeal_Model_Association_Data_CollectionInterface) {
-    					$objects = $associationData->getObjects();
-    					if ($objects) {
-    						$associationShortname = $associationData->getAssociation()->getShortname();
-    						$this->unsavedAssociationData[$shortname] = array();
-    						foreach ($objects as $object) {
-    							$this->unsavedAssociationData[$shortname][] = $object->toArray();
-    						}
-    						$sleepFields[] = 'unsavedAssociationData';
-    					}
-    				} else {
-    					throw new Zeal_Model_Exception('Invalid association data type');
-    				}
-    			}
-    		}
+		$publicProperties = Zeal_Orm::getPublicProperties($this);
+		if ($publicProperties) {
+		    foreach ($publicProperties as $key) {
+		        $data[$key] = $this->$key;
+		    }
 		}
 
-		$sleepFields = array_unique($sleepFields);
+		// and any unsaved association data
+		$data = array_merge($data, $this->getUnsavedAssociationData());
 
-		return $sleepFields;
+
+		return serialize($data);
 	}
 
 	/**
-	 * PHP magic method run when an object is unserialized
+	 * Part of Serializeable, restores object state when unserialize($model) is called.
 	 *
-	 * Restores any unsaved association data that was set aside by __sleep()
-	 *
-	 * @return void
+	 * @param array $data
 	 */
-	public function __wakeup()
+	public function unserialize($data)
 	{
-		// restore any associations
-		$this->init();
+	    // restore any associations
+	    $this->init();
 
-		// move any unsaved association data back into the appropriate objects
-		if (count($this->unsavedAssociationData) > 0) {
-			foreach ($this->unsavedAssociationData as $associationShortname => $data) {
-				if ($this->isAssociation($associationShortname)) {
-					$this->$associationShortname->build($data);
-				} else {
-					// error here? we have data for an association which doesn't exist
-				}
-			}
-
-			$this->unsavedAssociationData = array();
-		}
+	    // and populate model
+	    $this->populate(unserialize($data));
 	}
 
     /**
@@ -376,6 +352,26 @@ abstract class Zeal_ModelAbstract implements Zeal_ModelInterface
 		}
 
 		return $data;
+    }
+
+    protected function unsavedAssociations()
+    {
+        $unsavedAssociations = array();
+
+        foreach ($this->getAssociations() as $associationShortname => $association) {
+            if (isset($this->associationData[$associationShortname])) {
+
+            }
+        }
+
+        return $unsavedAssociations();
+    }
+
+    public function toArrayForSerialization()
+    {
+        $sleepFields = $this->__sleep();
+
+
     }
 
     /**
@@ -434,6 +430,38 @@ abstract class Zeal_ModelAbstract implements Zeal_ModelInterface
 
         // store the association in the model
         $this->associations[$associationShortname] = $association;
+    }
+
+    /**
+     * Create the association data object for the specified association
+     *
+     * @param Zeal_Model_Association|string $association
+     * @throws Zeal_Model_Exception
+     */
+    protected function _initAssociationData($association)
+    {
+        if (!$this->associationData) {
+            $this->associationData = array();
+        }
+
+        if (is_string($association)) {
+            if (!array_key_exists($association, $this->associations)) {
+                throw new Zeal_Model_Exception('Invalid association name passed to _setAssociationData');
+            }
+
+            $association = $this->associations[$association];
+        }
+        $associationShortname = $association->getShortname();
+
+        if (!array_key_exists($associationShortname, $this->associationData)) {
+            $associationData = $this->associations[$associationShortname]->initAssociationData();
+
+            // populate stuff it might need
+            $associationData->setAssociation($association)
+                ->setModel($this);
+
+            $this->associationData[$associationShortname] = $associationData;
+        }
     }
 
     /**
@@ -541,18 +569,7 @@ abstract class Zeal_ModelAbstract implements Zeal_ModelInterface
     protected function _getAssociationData($associationShortname)
     {
         if (!isset($this->associationData[$associationShortname])) {
-
-            $association = $this->associations[$associationShortname];
-
-            // initialise association data class
-            $associationData = $association->initAssociationData();
-
-            // populate stuff it might need
-            $associationData->setAssociation($association)
-                            ->setModel($this);
-
-            // store in the model
-            $this->associationData[$associationShortname] = $associationData;
+            $this->_initAssociationData($associationShortname);
         }
 
         return $this->associationData[$associationShortname];

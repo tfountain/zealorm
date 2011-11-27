@@ -2,12 +2,17 @@
 
 require_once 'library/Zeal/_files/UserMapper.php';
 require_once 'library/Zeal/_files/User.php';
+require_once 'library/Zeal/_files/AddressMapper.php';
+require_once 'library/Zeal/_files/Address.php';
 
 class AnotherUser extends Zeal_ModelAbstract
 {
 	public function init()
 	{
-		$this->belongsTo('address', array('className' => 'Address'));
+		$this->belongsTo('address', array(
+			'className' => 'Address',
+			'allowNestedAssignment' => true
+		));
 	}
 }
 
@@ -78,17 +83,31 @@ class Zeal_ModelAbstractTest extends PHPUnit_Framework_TestCase
 			'surname' => 'Bloggs',
 			'email' => null
 		);
+		$userAfterSerialize = unserialize(serialize($user));
 
-		$this->assertEquals($expected, unserialize(serialize($user))->toArray());
+		$this->assertEquals($expected, $userAfterSerialize->toArray());
+	}
+
+	public function testSerializeIncludesPublicProperties()
+	{
+	    $user = new User();
+
+	    $user->xxx = 'Foo';
+	    $userAfterSerialize = unserialize(serialize($user));
+
+	    $this->assertEquals('Foo', $userAfterSerialize->xxx);
 	}
 
 	public function testSerializeIncludesUnsavedAssociationData()
 	{
+	    // Note: the AnotherUser class is used here as it defines its associations
+	    // in the init() method, which is automatically run during unserialization
 		$user = new AnotherUser();
 
 		$user->address->address1 = '1 My Road';
+		$userAfterSerialize = unserialize(serialize($user));
 
-		$this->assertEquals('1 My Road', unserialize(serialize($user))->address->address1);
+		$this->assertEquals('1 My Road', $userAfterSerialize->address->address1);
 	}
 
 	public function testAssociationStoresReferenceToModel()
@@ -124,6 +143,26 @@ class Zeal_ModelAbstractTest extends PHPUnit_Framework_TestCase
 		$user->firstName = 'Bob';
 
 		$this->assertTrue($user->isDirty());
+	}
+
+	public function testPopulatedAssociationDataStartsDirty()
+	{
+	    $user = new User();
+	    $user->belongsTo('address', array(
+			'className' => 'Address',
+			'allowNestedAssignment' => true
+	    ));
+
+	    $data = array(
+	        'address' => array(
+	            'address1' => '1 My Road'
+	        )
+	    );
+
+	    $user->populate($data);
+
+	    $this->assertTrue($user->isDirty());
+	    $this->assertTrue($user->address->getObject()->isDirty());
 	}
 
 }

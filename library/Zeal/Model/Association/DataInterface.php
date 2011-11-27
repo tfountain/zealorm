@@ -18,7 +18,7 @@ interface Zeal_Model_Association_DataInterface
 
     public function setObject($object);
 
-    public function setData($data);
+    public function populate($data);
 
     public function build(array $data = array());
 
