@@ -177,7 +177,7 @@ class Zeal_Model_Association_Data_Collection extends Zeal_Model_Association_Data
         if (is_array($data)) {
             if (count($data) > 0) {
                 if (is_object($data[0])) {
-                    if (!($data[0] instanceof $className)) {
+                    if ($data[0] instanceof $className) {
                         $this->setObjects($data);
                     } else {
                         throw new Zeal_Model_Exception('Objects passed to association \''.$this->getAssociation()->getShortname().'\' must be instances of '.$className);
