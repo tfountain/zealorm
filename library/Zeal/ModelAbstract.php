@@ -180,7 +180,7 @@ abstract class Zeal_ModelAbstract implements Zeal_ModelInterface, Serializable
             $this->associationData[$var]->populate($value);
 
         } else {
-            if (!$this->dirty) {
+            if (!$this->dirty && $this->$var !== $value) {
                 $this->dirty = true;
             }
 

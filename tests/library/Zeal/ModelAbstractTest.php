@@ -140,7 +140,7 @@ class Zeal_ModelAbstractTest extends PHPUnit_Framework_TestCase
 
 		$this->assertFalse($user->isDirty());
 
-		$user->firstName = 'Bob';
+		$user->firstname = 'Bob';
 
 		$this->assertTrue($user->isDirty());
 	}
@@ -163,6 +163,36 @@ class Zeal_ModelAbstractTest extends PHPUnit_Framework_TestCase
 
 	    $this->assertTrue($user->isDirty());
 	    $this->assertTrue($user->address->getObject()->isDirty());
+	}
+
+	public function testSettingDataToSameValueDoesNotSetDirty()
+	{
+		$user = new User();
+		$user->firstname = 'Joe';
+		$user->surname = 'Bloggs';
+
+		$user->setDirty(false);
+
+		$this->assertFalse($user->isDirty());
+
+		$user->firstname = 'Joe';
+
+		$this->assertFalse($user->isDirty());
+	}
+
+	public function testPopulatingDataToSameValueDoesNotSetDirty()
+	{
+	    $user = new User();
+	    $user->firstname = 'Joe';
+	    $user->surname = 'Bloggs';
+
+	    $user->setDirty(false);
+
+	    $user->populate(array(
+	        'surname' => 'Bloggs'
+	    ));
+
+	    $this->assertFalse($user->isDirty());
 	}
 
 }
