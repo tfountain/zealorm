@@ -165,6 +165,22 @@ class Zeal_ModelAbstractTest extends PHPUnit_Framework_TestCase
 	    $this->assertTrue($user->address->getObject()->isDirty());
 	}
 
+	// TODO this is really a test of the association data class
+	public function testBuildingAssociationStartsDirty()
+	{
+	    $user = new User();
+	    $user->belongsTo('address', array(
+			'className' => 'Address',
+			'allowNestedAssignment' => true
+	    ));
+
+	    $user->address->build(array(
+	        'address1' => '1 My Road'
+	    ));
+
+	    $this->assertTrue($user->address->getObject()->isDirty());
+	}
+
 	public function testSettingDataToSameValueDoesNotSetDirty()
 	{
 		$user = new User();

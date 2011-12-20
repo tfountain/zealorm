@@ -221,6 +221,7 @@ class Zeal_Model_Association_Data_Collection extends Zeal_Model_Association_Data
         $className = $this->getAssociation()->getClassName();
         $object = $this->getMapper()->arrayToObject($data);
         $this->getAssociation()->populateObject($object);
+        $object->setDirty(true);
 
         if (!$this->loaded && $this->loadRequired) {
             $this->load();
