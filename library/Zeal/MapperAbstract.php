@@ -482,7 +482,6 @@ abstract class Zeal_MapperAbstract implements Zeal_MapperInterface
                         } else {
                             // something has been put in the variable that is not an association data object
                             echo 'oh noes:';
-                            var_Dump($associationData);
                             throw new Zeal_Mapper_Exception('Found something other than an association data object in '.get_class($this).'->'.$association->getShortname());
                         }
                         break;
