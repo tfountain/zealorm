@@ -339,7 +339,7 @@ abstract class Zeal_MapperAbstract implements Zeal_MapperInterface
                     $closure = $fieldTypes[$fieldType];
                     $data[$field] = $closure($value);
 
-                } else {
+                } else if ($value !== null) {
                     switch ($fieldType) {
                         case 'boolean':
                             $data[$field] = (bool)$value;
