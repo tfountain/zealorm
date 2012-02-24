@@ -165,7 +165,7 @@ class Zeal_ModelAbstractTest extends PHPUnit_Framework_TestCase
 	    $this->assertTrue($user->address->getObject()->isDirty());
 	}
 
-	// TODO this is really a test of the association data class
+	// This is really a test of the association data class and should be moved - TODO
 	public function testBuildingAssociationStartsDirty()
 	{
 	    $user = new User();

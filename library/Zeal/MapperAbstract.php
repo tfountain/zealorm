@@ -460,47 +460,50 @@ abstract class Zeal_MapperAbstract implements Zeal_MapperInterface
      */
     protected function _saveAssociated($object)
     {
-        $associations = $object->getAssociations();
-        if ($associations) {
+        $associationsToSave = $object->getUnsavedAssociationData();
+        if ($associationsToSave) {
             $nestableAssociations = $object->getNestableAssociations();
-            foreach ($associations as $association) {
-                switch ($association->getType()) {
-                    case Zeal_Model_AssociationInterface::HAS_ONE:
-                    case Zeal_Model_AssociationInterface::BELONGS_TO:
-                        $associationData = $object->{$association->getShortname()};
-                        if ($associationData instanceof Zeal_Model_Association_DataInterface) {
-                            $associatedObject = $associationData->getObject();
-                            if ($associatedObject && $associatedObject->isDirty()) {
-                                if (in_array($association, $nestableAssociations)) {
-                                    $association->populateObject($associatedObject);
-                                    $association->getMapper()->save($associatedObject);
-                                }  else {
-                                    // data for an association that can't be saved!
-                                    throw new Zeal_Mapper_Exception('Association \''.$association->getShortname().'\' contains data that requires saving but allow nested assignment is set to false');
+            foreach ($associationsToSave as $associationShortname => $associationData) {
+                $association = $object->getAssociation($associationShortname);
+                if (in_array($association, $nestableAssociations)) {
+                    switch ($association->getType()) {
+                        case Zeal_Model_AssociationInterface::HAS_ONE:
+                        case Zeal_Model_AssociationInterface::BELONGS_TO:
+                            $associationData = $object->{$association->getShortname()};
+                            if ($associationData instanceof Zeal_Model_Association_DataInterface) {
+                                $associatedObject = $associationData->getObject();
+                                if ($associatedObject && $associatedObject->isDirty()) {
+                                    if (in_array($association, $nestableAssociations)) {
+                                        $association->populateObject($associatedObject);
+                                        $association->getMapper()->save($associatedObject);
+                                    } else {
+                                        // data for an association that can't be saved!
+                                        throw new Zeal_Mapper_Exception('Association \''.$association->getShortname().'\' contains data that requires saving but allow nested assignment is set to false');
+                                    }
                                 }
+                            } else {
+                                // something has been put in the variable that is not an association data object
+                                echo 'oh noes:';
+                                throw new Zeal_Mapper_Exception('Found something other than an association data object in '.get_class($this).'->'.$association->getShortname());
                             }
-                        } else {
-                            // something has been put in the variable that is not an association data object
-                            echo 'oh noes:';
-                            throw new Zeal_Mapper_Exception('Found something other than an association data object in '.get_class($this).'->'.$association->getShortname());
-                        }
-                        break;
+                            break;
 
-                    case Zeal_Model_AssociationInterface::HAS_MANY:
-                    case Zeal_Model_AssociationInterface::HAS_AND_BELONGS_TO_MANY:
-                        $associatedObjects = $object->{$association->getShortname()}->getObjects();
-                        foreach ($associatedObjects as $associatedObject) {
-                            if ($associatedObject->isDirty()) {
-                                if (in_array($association, $nestableAssociations)) {
-                                    $association->populateObject($associatedObject);
-                                    $association->getMapper()->save($associatedObject);
-                                }  else {
-                                    // data for an association that can't be saved!
-                                    throw new Zeal_Mapper_Exception('Association \''.$association->getShortname().'\' contains data that requires saving but allow nested assignment is set to false');
+                        case Zeal_Model_AssociationInterface::HAS_MANY:
+                        case Zeal_Model_AssociationInterface::HAS_AND_BELONGS_TO_MANY:
+                            $associatedObjects = $object->{$association->getShortname()}->getObjects();
+                            foreach ($associatedObjects as $associatedObject) {
+                                if ($associatedObject->isDirty()) {
+                                    if (in_array($association, $nestableAssociations)) {
+                                        $association->populateObject($associatedObject);
+                                        $association->getMapper()->save($associatedObject);
+                                    } else {
+                                        // data for an association that can't be saved!
+                                        throw new Zeal_Mapper_Exception('Association \''.$association->getShortname().'\' contains data that requires saving but allow nested assignment is set to false');
+                                    }
                                 }
                             }
-                        }
-                        break;
+                            break;
+                    }
                 }
             }
         }
