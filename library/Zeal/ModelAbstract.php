@@ -89,8 +89,6 @@ abstract class Zeal_ModelAbstract implements Zeal_ModelInterface, Serializable
      */
     public function populate(array $data, $guard = true)
     {
-        $this->setDirty(true);
-
         foreach ($data as $key => $value) {
             if ($guard && $this->_isGuarded($key)) {
                 throw new Zeal_Model_Exception('Unable to mass-assign guarded field \''.htmlspecialchars($key).'\'');
@@ -175,6 +173,8 @@ abstract class Zeal_ModelAbstract implements Zeal_ModelInterface, Serializable
             return $this->$setMethodName($value);
 
         } else if ($this->isAssociation($var)) {
+            $this->dirty = true;
+
             $this->_initAssociationData($var);
 
             $this->associationData[$var]->populate($value);
