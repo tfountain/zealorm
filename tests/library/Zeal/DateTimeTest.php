@@ -19,7 +19,7 @@ class Zeal_Mapper_FieldType_DateTimeTest extends PHPUnit_Framework_TestCase
             'date' => new Zend_Db_Expr('NOW()')
         ));
 
-        $this->assertTrue(($model->date instanceof Zeal_Mapper_FieldType_DateTime));
+        $this->assertTrue(($model->date instanceof Zeal_DateTime));
         $this->assertEquals(date('j/n/Y'), $model->date->format('j/n/Y'));
     }
 
@@ -29,7 +29,7 @@ class Zeal_Mapper_FieldType_DateTimeTest extends PHPUnit_Framework_TestCase
             'date' => time()
         ));
 
-        $this->assertTrue(($model->date instanceof Zeal_Mapper_FieldType_DateTime));
+        $this->assertTrue(($model->date instanceof Zeal_DateTime));
         $this->assertEquals(date('j/n/Y'), $model->date->format('j/n/Y'));
     }
 }
