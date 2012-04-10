@@ -4,13 +4,13 @@
  *
  * @category   Zeal
  * @package    Zeal ORM
- * @copyright  Copyright (c) 2010-2011 Tim Fountain (http://tfountain.co.uk/)
+ * @copyright  Copyright (c) 2010-2012 Tim Fountain (http://tfountain.co.uk/)
  * @license    New BSD License - http://tfountain.co.uk/license/new-bsd
  */
 
-class Zeal_Mapper_FieldType_Date extends DateTime implements Zeal_Mapper_FieldTypeInterface
+class Zeal_DateTime extends DateTime implements Zeal_Mapper_FieldTypeInterface
 {
-    static $_defaultFormat = 'd/m/Y';
+    static $_defaultFormat = 'H:i, d/m/Y';
 
     public function __construct($time)
     {
@@ -45,6 +45,6 @@ class Zeal_Mapper_FieldType_Date extends DateTime implements Zeal_Mapper_FieldTy
      */
     public function getValueForStorage(Zeal_Mapper_AdapterInterface $adapter)
     {
-        return $this->format('Y-m-d');
+        return $this->format('Y-m-d H:i:s');
     }
 }

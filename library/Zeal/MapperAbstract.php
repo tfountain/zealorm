@@ -4,7 +4,7 @@
  *
  * @category   Zeal
  * @package    Zeal ORM
- * @copyright  Copyright (c) 2010-2011 Tim Fountain (http://tfountain.co.uk/)
+ * @copyright  Copyright (c) 2010-2012 Tim Fountain (http://tfountain.co.uk/)
  * @license    New BSD License - http://tfountain.co.uk/license/new-bsd
  */
 
@@ -358,18 +358,18 @@ abstract class Zeal_MapperAbstract implements Zeal_MapperInterface
                             break;
 
                         case 'datetime':
-                        	if ($value instanceof Zeal_Mapper_FieldType_DateTime) {
+                        	if ($value instanceof Zeal_DateTime) {
                         		$data[$field] = $value;
                         	} else {
-                            	$data[$field] = new Zeal_Mapper_FieldType_DateTime($value);
+                            	$data[$field] = new Zeal_DateTime($value);
                         	}
                             break;
 
                         case 'date':
-                        	if ($value instanceof Zeal_Mapper_FieldType_Date) {
+                        	if ($value instanceof Zeal_Date) {
                         		$data[$field] = $value;
                         	} else {
-                        		$data[$field] = new Zeal_Mapper_FieldType_Date($value.' 12:00:00');
+                        		$data[$field] = new Zeal_Date($value.' 12:00:00');
                         	}
                             break;
                     }
