@@ -101,7 +101,7 @@ Mapper classes typically define two arrays, the first contains options specific 
         );
     }
 
-currently supported types are: integer, string, boolean, serialized, date, datetime. The `serialized` type will automatically serialize/unserialize contents as they are stored and retreived. The `date` and `datetime` types will be represented by instances of `Zeal_Date` and `Zeal_DateTime` respectively, which in turn extend the [PHP Datetime class][http://php.net/manual/en/book.datetime.php]. Custom field types can be created by registering them using `Zeal_Orm::registerFieldType()` (docs to come).
+currently supported types are: integer, string, boolean, serialized, date, datetime. The `serialized` type will automatically serialize/unserialize contents as they are stored and retreived. The `date` and `datetime` types will be represented by instances of `Zeal_Date` and `Zeal_DateTime` respectively, which in turn extend the [PHP Datetime class](http://php.net/manual/en/book.datetime.php). Custom field types can be created by registering them using `Zeal_Orm::registerFieldType()` (docs to come).
 
 Mapper classes can be loaded using `Zeal_Orm::getMapper()`. getMapper() requires one parameter, which is either a string containing the name of the class you want the mapper for, or an instance of that class:
 
@@ -150,3 +150,47 @@ the query object is specific to the adapter type, so if you are using the Zend_D
           ->order('surname ASC');
 
     $users = $mapper->fetchAll($query);
+
+
+## Associations
+
+Zeal ORM supports Ruby on Rails style associations, which allow easy loading of related objects.
+
+Associations are typically defined in the `init()` method of the model (which is called automatically by the constructor). There are four association methods, one for each supported type of association: `hasMany()`, `hasOne()`, `belongsTo()`, `hasAnyBelongsToMany()`. These methods take the association shortname as the first parameter, followed by an array of options as the second parameter. The options array should minimally contain the key `className` set to the full class name of the objects to be loaded:
+
+    class Yourapp_Model_User extends Zeal_ModelAbstract
+    {
+        [...]
+
+        public function init()
+        {
+            $this->hasMany('addresses', array(
+                'className' => 'Yourapp_Model_Address'
+            ));
+
+            $this->belongsTo('employer', array(
+                'className' => 'Yourapp_Model_Employer'
+            ));
+        }
+    }
+
+usage:
+
+    $mapper = Zeal_Orm::getMapper('Yourapp_Model_User');
+    $user = $mapper->find(1);
+
+    foreach ($user->addresses as $address) {
+        echo $address->address1.'<br>';
+    }
+
+    echo $user->employer->name;
+
+you can also access a query object for the association, allowing for a subset of the objects to be loaded:
+
+    $query = $user->addresses->query();
+    $query->where('country = ?', 'United Kingdom');
+
+    echo $query; // outputs: SELECT * FROM addresses WHERE userID = 1 AND country = 'United Kingdom'
+    $ukAddresses = $addressMapper->fetchAll($query);
+
+Note: Since loading of association data is satisfied by the mapper of the association class, it is quite possible for associated objects to be loaded from a completely different type of storage. For example, if the mapper for the Employer class in the example above used a custom adapter created for a web service, calling `$user->addresses` would dynamically load this data from the web service, even though the user itself might be stored in a local database.
