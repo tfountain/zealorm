@@ -21,6 +21,11 @@ class Zeal_Orm
     protected static $fieldTypes = array();
 
     /**
+     * @var array
+     */
+    protected static $behaviours = array();
+
+    /**
      * Returns the mapper registry instance
      *
      * @return Zeal_Mapper_Registry
@@ -85,5 +90,19 @@ class Zeal_Orm
     static public function getFieldTypes()
     {
         return self::$fieldTypes;
+    }
+
+    static public function registerBehaviour($shortname, $className)
+    {
+        self::$behaviours[$shortname] = $className;
+    }
+    
+    /**
+     *
+     * @return array
+     */
+    static public function getRegisteredBehaviours()
+    {
+        return self::$behaviours;
     }
 }

@@ -25,9 +25,12 @@ abstract class Zeal_ModelAbstract implements Zeal_ModelInterface, Serializable
     protected $associationData;
 
     /**
-    * @var null|array
-    */
-    static protected $availableBehaviours;
+     * An array of class level behaviours which are initialised when an instance
+     * of the class is created
+     *
+     * @var null|array
+     */
+    static protected $classBehaviours;
 
     /**
     * @var null|array
@@ -67,6 +70,8 @@ abstract class Zeal_ModelAbstract implements Zeal_ModelInterface, Serializable
         }
 
         $this->init();
+
+        $this->initBehaviours();
     }
 
     /**
@@ -582,13 +587,13 @@ abstract class Zeal_ModelAbstract implements Zeal_ModelInterface, Serializable
      * @param string $class
      * @return void
      */
-    static public function registerBehaviour($behaviourShortname, $class)
+    static public function registerBehaviour($behaviourShortname, $initOptions = null)
     {
-        if (isset(self::$availableBehaviours[$behaviourShortname])) {
+        if (isset(static::$classBehaviours[$behaviourShortname])) {
             throw new Zeal_Model_Exception('A behaviour with the shortname \''.htmlspecialchars($behaviourShortname).'\' already exists');
         }
 
-        self::$availableBehaviours[$behaviourShortname] = $class;
+        static::$classBehaviours[$behaviourShortname] = $initOptions;
     }
 
     /**
@@ -598,9 +603,8 @@ abstract class Zeal_ModelAbstract implements Zeal_ModelInterface, Serializable
      */
     static public function unregisterAllBehaviours()
     {
-        self::$availableBehaviours = array();
-    }
-
+        static::$classBehaviours = array();
+    }    
 
     /**
      * Activate a behaviour on a model
@@ -615,20 +619,38 @@ abstract class Zeal_ModelAbstract implements Zeal_ModelInterface, Serializable
             $this->activeBehaviours = array();
         }
 
-        if (!isset(self::$availableBehaviours[$behaviourShortname])) {
-            throw new Zeal_Model_Exception('Invalid behaviour: '.htmlspecialchars($behaviourShortname).' defined in class \''.get_class($this).'\'');
+        $registeredBehaviours = Zeal_Orm::getRegisteredBehaviours();
+        if (!isset($registeredBehaviours[$behaviourShortname])) {
+            throw new Zeal_Model_Exception('Invalid behaviour: '.htmlspecialchars($behaviourShortname).'\' specified');
         }
 
-        $behaviourClass = self::$availableBehaviours[$behaviourShortname];
+        $behaviourClass = $registeredBehaviours[$behaviourShortname];
         if (!class_exists($behaviourClass)) {
             throw new Zeal_Model_Exception('Invalid behaviour class: '.htmlspecialchars($behaviourClass));
         }
 
         $behaviour = new $behaviourClass($options);
         $behaviour->setModel($this)
-            ->init();
+                  ->init();
 
         $this->activeBehaviours[$behaviourShortname] = $behaviour;
+    }
+
+
+    public function initBehaviours()
+    {
+        if (static::$classBehaviours) {
+            $registeredBehaviours = Zeal_Orm::getRegisteredBehaviours();
+
+            foreach (static::$classBehaviours as $behaviourShortname => $initOptions) {
+                $behaviourClassName = $registeredBehaviours[$behaviourShortname];
+                $behaviour = new $behaviourClassName($initOptions);
+                $behaviour->setModel($this)
+                          ->init();
+
+                $this->activeBehaviours[$behaviourShortname] = $behaviour;
+            }
+        }
     }
 
     /**
