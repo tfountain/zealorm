@@ -604,7 +604,7 @@ abstract class Zeal_ModelAbstract implements Zeal_ModelInterface, Serializable
     static public function unregisterAllBehaviours()
     {
         static::$classBehaviours = array();
-    }    
+    }
 
     /**
      * Activate a behaviour on a model
@@ -643,6 +643,10 @@ abstract class Zeal_ModelAbstract implements Zeal_ModelInterface, Serializable
             $registeredBehaviours = Zeal_Orm::getRegisteredBehaviours();
 
             foreach (static::$classBehaviours as $behaviourShortname => $initOptions) {
+                if (!isset($registeredBehaviours[$behaviourShortname])) {
+                    throw new Zeal_Model_Exception('Attempted to initialise unregistered behaviour \''.htmlspecialchars($behaviourShortname).'\' in class '.get_class($this));
+                }
+
                 $behaviourClassName = $registeredBehaviours[$behaviourShortname];
                 $behaviour = new $behaviourClassName($initOptions);
                 $behaviour->setModel($this)
