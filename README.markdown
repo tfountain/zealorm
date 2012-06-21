@@ -101,7 +101,7 @@ Mapper classes typically define two arrays, the first contains options specific 
         );
     }
 
-currently supported types are: integer, string, boolean, serialized, date, datetime. The `serialized` type will automatically serialize/unserialize contents as they are stored and retreived. The `date` and `datetime` types will be represented by instances of `Zeal_Date` and `Zeal_DateTime` respectively, which in turn extend the [PHP Datetime class](http://php.net/manual/en/book.datetime.php). Custom field types can be created by registering them using `Zeal_Orm::registerFieldType()` (docs to come).
+currently supported types are: integer, string, boolean, serialized, date, datetime. The `serialized` type will automatically serialize/unserialize contents as they are stored and retreived. The `date` and `datetime` types will be represented by instances of `Zeal_Date` and `Zeal_DateTime` respectively, which in turn extend the [PHP Datetime class](http://www.php.net/manual/en/class.datetime.php). Custom field types can be created by registering them using `Zeal_Orm::registerFieldType()` (docs to come).
 
 Mapper classes can be loaded using `Zeal_Orm::getMapper()`. getMapper() requires one parameter, which is either a string containing the name of the class you want the mapper for, or an instance of that class:
 
