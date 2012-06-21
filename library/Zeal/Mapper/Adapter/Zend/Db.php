@@ -391,6 +391,88 @@ class Zeal_Mapper_Adapter_Zend_Db extends Zeal_Mapper_AdapterAbstract
         return $object;
     }
 
+    public function saveAssociatedForAssociation($object, Zeal_Model_AssociationInterface $association)
+    {
+        switch ($association->getType()) {
+            case Zeal_Model_AssociationInterface::HAS_ONE:
+            case Zeal_Model_AssociationInterface::BELONGS_TO:
+                $associationData = $parentObject->{$association->getShortname()};
+                if ($associationData instanceof Zeal_Model_Association_DataInterface) {
+                    $associatedObject = $associationData->getObject();
+                    if ($associatedObject && $associatedObject->isDirty()) {
+                        if (in_array($association, $nestableAssociations)) {
+                            $association->populateObject($associatedObject);
+                            $association->getMapper()->save($associatedObject);
+                        } else {
+                            // data for an association that can't be saved!
+                            throw new Zeal_Mapper_Exception('Association \''.$association->getShortname().'\' contains data that requires saving but allow nested assignment is set to false');
+                        }
+                    }
+                } else {
+                    // something has been put in the variable that is not an association data object
+                    throw new Zeal_Mapper_Exception('Found something other than an association data object in '.get_class($this).'->'.$association->getShortname());
+                }
+                break;
+
+            case Zeal_Model_AssociationInterface::HAS_MANY:
+                $associatedObjects = $parentObject->{$association->getShortname()}->getObjects();
+                foreach ($associatedObjects as $associatedObject) {
+                    if ($associatedObject->isDirty()) {
+                        if (in_array($association, $nestableAssociations)) {
+                            $association->populateObject($associatedObject);
+                            $association->getMapper()->save($associatedObject);
+                        } else {
+                            // data for an association that can't be saved!
+                            throw new Zeal_Mapper_Exception('Association \''.$association->getShortname().'\' contains data that requires saving but allow nested assignment is set to false');
+                        }
+                    }
+                }
+                break;
+
+            case Zeal_Model_AssociationInterface::HAS_AND_BELONGS_TO_MANY:
+                $lookupTable = $this->getLookupTableForHabtm($association);
+                $foreignKey = $association->getOption('foreignKey', $this->getMapper()->getAdapter()->getPrimaryKey());
+                $associationForeignKey = $association->getOption('associationForeignKey', $association->getMapper()->getAdapter()->getPrimaryKey());
+
+                $associatedObjects = $object->{$association->getShortname()}->getObjects();
+                foreach ($associatedObjects as $associatedObject) {
+                    $objectKeyValue = $object->{$this->getPrimaryKey()};
+                    $associatedObjectKeyValue = $associatedObject->{$association->getMapper()->getAdapter()->getPrimaryKey()};
+
+                    $count = $this->getDb()->fetchOne("
+                        SELECT COUNT(*) FROM $lookupTable WHERE $foreignKey = ? AND $associationForeignKey = ?",
+                        array($objectKeyValue, $associatedObjectKeyValue)
+                    );
+                    if ($count == 0) {
+                        // create the lookup
+                        $this->getDb()->insert($lookupTable, array(
+                            $foreignKey => $objectKeyValue,
+                            $associationForeignKey => $associatedObjectKeyValue
+                        ));
+                    }
+                }
+                break;
+        }
+
+        return true;
+    }
+
+    public function getLookupTableForHabtm($association)
+    {        
+        if ($association->hasOption('lookupTable')) {
+            $lookupTable = $association->getOption('lookupTable');
+        } else {
+            $tables = array(
+                $association->getMapper()->getAdapter()->getTableName(),
+                $association->getModelMapper()->getAdapter()->getTableName()
+            );
+            sort($tables);
+            $lookupTable = $tables[0].ucfirst($tables[1]);
+        }
+
+        return $lookupTable;
+    }
+
     /**
      * (non-PHPdoc)
      * @see Mapper/Zeal_Mapper_AdapterInterface#populateQueryForAssociation($query, $association)
@@ -439,16 +521,7 @@ class Zeal_Mapper_Adapter_Zend_Db extends Zeal_Mapper_AdapterAbstract
                 break;
 
             case Zeal_Model_AssociationInterface::HAS_AND_BELONGS_TO_MANY:
-                if ($association->hasOption('lookupTable')) {
-                    $lookupTable = $association->getOption('lookupTable');
-                } else {
-                    $tables = array(
-                        $association->getMapper()->getAdapter()->getTableName(),
-                        $association->getModelMapper()->getAdapter()->getTableName()
-                    );
-                    sort($tables);
-                    $lookupTable = $tables[0].ucfirst($tables[1]);
-                }
+                $lookupTable = $this->getLookupTableForHabtm($association);
 
                 $tableName = $this->getTableName();
                 $foreignKey = $association->getOption('foreignKey', $association->getModelMapper()->getAdapter()->getPrimaryKey());

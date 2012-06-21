@@ -107,6 +107,15 @@ interface Zeal_Mapper_AdapterInterface
     public function populateObjectForAssociation($object, Zeal_Model_AssociationInterface $association);
 
     /**
+     * Saves associated objects for a specific association
+     * 
+     * @param object $object the object which the association belongs to
+     * @param Zeal_Model_AssociationInterface $association the association itself
+     * @return boolean
+     */
+    public function saveAssociatedForAssociation($object, Zeal_Model_AssociationInterface $association);
+
+    /**
      *
      * @param Zeal_Mapper_QueryInterface $query
      * @param Zeal_Model_AssociationInterface $association

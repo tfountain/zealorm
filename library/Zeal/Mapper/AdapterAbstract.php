@@ -39,5 +39,4 @@ abstract class Zeal_Mapper_AdapterAbstract implements Zeal_Mapper_AdapterInterfa
 	{
 		return $this->_mapper;
 	}
-
 }

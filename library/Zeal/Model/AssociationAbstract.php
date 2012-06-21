@@ -93,6 +93,21 @@ abstract class Zeal_Model_AssociationAbstract implements Zeal_Model_AssociationI
         }
     }
 
+    /*
+     * Sets an option
+     *
+     * @param string $key
+     * @param mixed $value
+     * @return Zeal_Model_AssociationAbstract
+     */
+    public function setOption($key, $value)
+    {
+        $this->options[$key] = $value;
+
+        return $this;
+    }
+
+
     /**
      * (non-PHPdoc)
      * @see Model/Zeal_Model_AssociationInterface#getOptions()
