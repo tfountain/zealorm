@@ -458,7 +458,7 @@ class Zeal_Mapper_Adapter_Zend_Db extends Zeal_Mapper_AdapterAbstract
     }
 
     public function getLookupTableForHabtm($association)
-    {        
+    {
         if ($association->hasOption('lookupTable')) {
             $lookupTable = $association->getOption('lookupTable');
         } else {
@@ -495,6 +495,7 @@ class Zeal_Mapper_Adapter_Zend_Db extends Zeal_Mapper_AdapterAbstract
                 break;
 
             case Zeal_Model_AssociationInterface::HAS_ONE:
+                $table = $this->getTableName();
                 $key = $association->getModelMapper()->getAdapter()->getPrimaryKey();
                 $value = $association->getModel()->$key;
 
@@ -504,10 +505,11 @@ class Zeal_Mapper_Adapter_Zend_Db extends Zeal_Mapper_AdapterAbstract
 		        }
 
                 $query = $association->getMapper()->query();
-                $query->where("$key = ?", $value);
+                $query->where("$table.$key = ?", $value);
                 break;
 
             case Zeal_Model_AssociationInterface::HAS_MANY:
+                $table = $this->getTableName();
                 $key = $association->getOption('primaryKey', $association->getModelMapper()->getAdapter()->getPrimaryKey());
                 $foreignKey = $association->getOption('foreignKey', $key);
                 $value = $association->getModel()->$key;
@@ -518,7 +520,7 @@ class Zeal_Mapper_Adapter_Zend_Db extends Zeal_Mapper_AdapterAbstract
 		        }
 
                 $query = $association->getMapper()->query();
-                $query->where("$foreignKey = ?", $value);
+                $query->where("$table.$foreignKey = ?", $value);
                 break;
 
             case Zeal_Model_AssociationInterface::HAS_AND_BELONGS_TO_MANY:
