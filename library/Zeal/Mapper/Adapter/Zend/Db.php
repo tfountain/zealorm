@@ -396,7 +396,7 @@ class Zeal_Mapper_Adapter_Zend_Db extends Zeal_Mapper_AdapterAbstract
         switch ($association->getType()) {
             case Zeal_Model_AssociationInterface::HAS_ONE:
             case Zeal_Model_AssociationInterface::BELONGS_TO:
-                $associationData = $parentObject->{$association->getShortname()};
+                $associationData = $object->{$association->getShortname()};
                 if ($associationData instanceof Zeal_Model_Association_DataInterface) {
                     $associatedObject = $associationData->getObject();
                     if ($associatedObject && $associatedObject->isDirty()) {
@@ -415,7 +415,7 @@ class Zeal_Mapper_Adapter_Zend_Db extends Zeal_Mapper_AdapterAbstract
                 break;
 
             case Zeal_Model_AssociationInterface::HAS_MANY:
-                $associatedObjects = $parentObject->{$association->getShortname()}->getObjects();
+                $associatedObjects = $object->{$association->getShortname()}->getObjects();
                 foreach ($associatedObjects as $associatedObject) {
                     if ($associatedObject->isDirty()) {
                         if (in_array($association, $nestableAssociations)) {
