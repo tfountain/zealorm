@@ -393,6 +393,7 @@ class Zeal_Mapper_Adapter_Zend_Db extends Zeal_Mapper_AdapterAbstract
 
     public function saveAssociatedForAssociation($object, Zeal_Model_AssociationInterface $association)
     {
+        $nestableAssociations = $object->getNestableAssociations();
         switch ($association->getType()) {
             case Zeal_Model_AssociationInterface::HAS_ONE:
             case Zeal_Model_AssociationInterface::BELONGS_TO:
