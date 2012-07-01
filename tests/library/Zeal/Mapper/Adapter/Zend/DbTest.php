@@ -77,7 +77,7 @@ class Zeal_Mapper_Adapter_Zend_DbTest extends PHPUnit_Framework_TestCase
         $address->userID = 1;
 
         $this->assertEquals(
-            'SELECT users.* FROM users WHERE (userID = 1)',
+            'SELECT users.* FROM users WHERE (users.userID = 1)',
             $address->user->query()->__toString()
         );
     }
@@ -91,7 +91,7 @@ class Zeal_Mapper_Adapter_Zend_DbTest extends PHPUnit_Framework_TestCase
         $user->userID = 1;
 
         $this->assertEquals(
-            'SELECT addresses.* FROM addresses WHERE (userID = 1)',
+            'SELECT addresses.* FROM addresses WHERE (addresses.userID = 1)',
             $user->address->query()->__toString()
         );
     }
@@ -105,7 +105,7 @@ class Zeal_Mapper_Adapter_Zend_DbTest extends PHPUnit_Framework_TestCase
         $user->userID = 1;
 
         $this->assertEquals(
-        	'SELECT addresses.* FROM addresses WHERE (userID = 1)',
+        	'SELECT addresses.* FROM addresses WHERE (addresses.userID = 1)',
             $user->addresses->query()->__toString()
         );
     }
