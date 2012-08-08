@@ -416,6 +416,7 @@ class Zeal_Mapper_Adapter_Zend_Db extends Zeal_Mapper_AdapterAbstract
                 break;
 
             case Zeal_Model_AssociationInterface::HAS_MANY:
+                $objectsProcessed = array();
                 $associatedObjects = $object->{$association->getShortname()}->getObjects();
                 foreach ($associatedObjects as $associatedObject) {
                     if ($associatedObject->isDirty()) {
@@ -427,6 +428,21 @@ class Zeal_Mapper_Adapter_Zend_Db extends Zeal_Mapper_AdapterAbstract
                             throw new Zeal_Mapper_Exception('Association \''.$association->getShortname().'\' contains data that requires saving but allow nested assignment is set to false');
                         }
                     }
+
+                    $objectsProcessed[] = $associatedObject->{$association->getMapper()->getAdapter()->getPrimaryKey()};
+                }
+
+                if (count($objectsProcessed) > 0) {
+                    // delete any objects that weren't submitted
+                    // TODO could use some refactoring
+                    $associationKey = $association->getMapper()->getAdapter()->getPrimaryKey();
+
+                    $query = $association->getMapper()->buildAssociationQuery($association);
+                    $query->reset(Zend_Db_Select::COLUMNS)
+                          ->reset(Zend_Db_Select::ORDER)
+                          ->where("$associationKey NOT IN (?)", $objectsProcessed);
+
+                    $association->getMapper()->getAdapter()->getDb()->query("DELETE ".$query);
                 }
                 break;
 
