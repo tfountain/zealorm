@@ -12,18 +12,22 @@ class Zeal_Date extends DateTime implements Zeal_Mapper_FieldTypeInterface
 {
     static $_defaultFormat = 'd/m/Y';
 
-    public function __construct($time)
+    public function __construct($time = null)
     {
-        if ($time instanceof Zend_Db_Expr) {
-            // might be NOW()
-            if ($time->__toString() == 'NOW()') {
-                $time = date('Y-m-d H:i:s');
-            } else {
-                throw new Zeal_Exception('Invalid date parameter supplied to DateTime');
+        if ($time) {
+            if ($time instanceof Zend_Db_Expr) {
+                // might be NOW()
+                if ($time->__toString() == 'NOW()') {
+                    $time = date('Y-m-d H:i:s');
+                } else {
+                    throw new Zeal_Exception('Invalid date parameter supplied to DateTime');
+                }
+            } else if (is_numeric($time) && $time > 0) {
+                // assume unix timestamp
+                $time = '@'.$time;
             }
-        } else if (is_numeric($time) && $time > 0) {
-            // assume unix timestamp
-            $time = '@'.$time;
+        } else {
+            $time = '@'.time();
         }
 
         parent::__construct($time);
