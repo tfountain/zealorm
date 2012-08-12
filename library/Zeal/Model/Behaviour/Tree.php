@@ -44,6 +44,10 @@ class Zeal_Model_Behaviour_Tree extends Zeal_Model_BehaviourAbstract
      */
     public function getParent()
     {
+        if (!$this->hasParent()) {
+            return false;
+        }
+
         return $this->getMapper()->find($this->getModel()->parentID);
     }
 
