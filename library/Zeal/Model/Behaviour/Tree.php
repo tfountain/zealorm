@@ -10,6 +10,8 @@
 
 class Zeal_Model_Behaviour_Tree extends Zeal_Model_BehaviourAbstract
 {
+    protected $children;
+
     /**
      * Returns the mapper being used by the tree
      *
@@ -40,9 +42,15 @@ class Zeal_Model_Behaviour_Tree extends Zeal_Model_BehaviourAbstract
      *
      * @return object
      */
-    public function parent()
+    public function getParent()
     {
         return $this->getMapper()->find($this->getModel()->parentID);
+    }
+
+    public function parent()
+    {
+        // DEPRECATED
+        return $this->getParent();
     }
 
     /**
@@ -61,17 +69,26 @@ class Zeal_Model_Behaviour_Tree extends Zeal_Model_BehaviourAbstract
      * @param false|string $order
      * @return array
      */
-    public function children($order = false)
+    public function getChildren($order = false)
     {
-        $mapper = $this->getMapper();
-        $query = $mapper->query()
-            ->where('parentID = ?', $this->getModel()->{$mapper->getAdapter()->getPrimaryKey()});
+        if (!$this->children) {
+            $mapper = $this->getMapper();
+            $query = $mapper->query()
+                ->where('parentID = ?', $this->getModel()->{$mapper->getAdapter()->getPrimaryKey()});
 
-        if ($order) {
-            $query->order($order);
+            if ($order) {
+                $query->order($order);
+            }
+
+            $this->children = $mapper->fetchAll($query);
         }
 
-        return $mapper->fetchAll($query);
+        return $this->children;
+    }
+
+    public function children($order = false)
+    {
+        return $this->getChildren($order);
     }
 
 }

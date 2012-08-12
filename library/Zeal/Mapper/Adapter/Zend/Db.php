@@ -548,9 +548,7 @@ class Zeal_Mapper_Adapter_Zend_Db extends Zeal_Mapper_AdapterAbstract
                 $associationForeignKey = $association->getOption('associationForeignKey', $this->getMapper()->getAdapter()->getPrimaryKey());
                 $associationKey = $association->getMapper()->getAdapter()->getPrimaryKey();
 
-                // note that this will always use the object's primary key, even if a different foreign key has been
-                // specified to be used in the association, possibly this should be optional TODO
-                $value = $association->getModel()->{$association->getModelMapper()->getAdapter()->getPrimaryKey()};
+                $value = $association->getModel()->{$foreignKey};
 
                 if (empty($value)) {
                 	return false;
