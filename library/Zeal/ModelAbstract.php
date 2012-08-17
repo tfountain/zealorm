@@ -306,6 +306,9 @@ abstract class Zeal_ModelAbstract implements Zeal_ModelInterface, Serializable
 	    // restore any associations
 	    $this->init();
 
+        // ...behaviours
+        $this->initBehaviours();
+
 	    // and populate model
 	    $this->populate(unserialize($data));
 	}
