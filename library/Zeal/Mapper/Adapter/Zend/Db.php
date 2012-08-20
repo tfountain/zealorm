@@ -429,10 +429,12 @@ class Zeal_Mapper_Adapter_Zend_Db extends Zeal_Mapper_AdapterAbstract
                         }
                     }
 
-                    $objectsProcessed[] = $associatedObject->{$association->getMapper()->getAdapter()->getPrimaryKey()};
+                    if ($association->getMapper()->getAdapter()->getPrimaryKey()) {
+                        $objectsProcessed[] = $associatedObject->{$association->getMapper()->getAdapter()->getPrimaryKey()};
+                    }
                 }
 
-                if (count($objectsProcessed) > 0) {
+                if (count($objectsProcessed) > 0 && $association->getMapper()->getAdapter()->getPrimaryKey()) {
                     // delete any objects that weren't submitted
                     // TODO could use some refactoring
                     $associationKey = $association->getMapper()->getAdapter()->getPrimaryKey();
