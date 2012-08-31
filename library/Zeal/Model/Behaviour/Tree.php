@@ -77,8 +77,14 @@ class Zeal_Model_Behaviour_Tree extends Zeal_Model_BehaviourAbstract
     {
         if (!$this->children) {
             $mapper = $this->getMapper();
+
+            $keyValue = $this->getModel()->{$mapper->getAdapter()->getPrimaryKey()};
+            if (!$keyValue) {
+                return false;
+            }
+
             $query = $mapper->query()
-                ->where('parentID = ?', $this->getModel()->{$mapper->getAdapter()->getPrimaryKey()});
+                ->where('parentID = ?', $keyValue);
 
             if ($order) {
                 $query->order($order);
