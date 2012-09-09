@@ -501,7 +501,7 @@ class Zeal_Mapper_Adapter_Zend_Db extends Zeal_Mapper_AdapterAbstract
         switch ($association->getType()) {
             case Zeal_Model_AssociationInterface::BELONGS_TO:
                 $table = $this->getTableName();
-                $key = $this->getPrimaryKey();
+                $key = $this->getOption('primaryKey', $this->getPrimaryKey());
                 $foreignKey = $association->getOption('foreignKey', $key);
                 $value = $association->getModel()->$foreignKey;
 
