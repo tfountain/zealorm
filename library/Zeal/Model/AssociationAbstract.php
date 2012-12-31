@@ -54,6 +54,14 @@ abstract class Zeal_Model_AssociationAbstract implements Zeal_Model_AssociationI
     protected $options = array();
 
     /**
+     * A query object
+     *
+     * @var Zeal_Mapper_QueryInterface
+     */
+    protected $query;
+
+
+    /**
      * Constructor
      *
      * @param array|null $options
@@ -275,5 +283,19 @@ abstract class Zeal_Model_AssociationAbstract implements Zeal_Model_AssociationI
     public function populateObject($object)
     {
         return $this->getMapper()->getAdapter()->populateObjectForAssociation($object, $this);
+    }
+
+    /**
+     * Returns a query object for this association
+     *
+     * @return Zeal_Mapper_QueryInterface
+     */
+    public function buildQuery()
+    {
+        if (!$this->query) {
+            $this->query = $this->getMapper()->buildAssociationQuery($this);
+        }
+
+        return clone $this->query;
     }
 }

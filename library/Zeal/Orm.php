@@ -77,10 +77,22 @@ class Zeal_Orm
     static public function registerFieldType($fieldType, $closure)
     {
         if (isset(self::$fieldTypes[$fieldType])) {
-            throw new Zeal_Exception('Field type \''.htmlspecialchars($fieldType).'\' is already registered');
+            //throw new Zeal_Exception('Field type \''.htmlspecialchars($fieldType).'\' is already registered');
         }
 
         self::$fieldTypes[$fieldType] = $closure;
+    }
+
+    /**
+     * Clears out any registered field types
+     *
+     * This is mainly for use when unit testing
+     *
+     * @return void
+     */
+    static public function clearFieldTypes()
+    {
+        self::$fieldTypes = array();
     }
 
     /**
@@ -96,7 +108,7 @@ class Zeal_Orm
     {
         self::$behaviours[$shortname] = $className;
     }
-    
+
     /**
      *
      * @return array

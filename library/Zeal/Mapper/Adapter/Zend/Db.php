@@ -15,21 +15,21 @@ class Zeal_Mapper_Adapter_Zend_Db extends Zeal_Mapper_AdapterAbstract
      *
      * @var Zend_Db_Adapter_Abstract
      */
-    static protected $_db;
+    static protected $db;
 
     /**
      * The database table name
      *
      * @var string
      */
-    protected $_tableName;
+    protected $tableName;
 
     /**
      * The primary key field
      *
      * @var string
      */
-    protected $_primaryKey;
+    protected $primaryKey;
 
     /**
      * Sets the Zend_Db adapter
@@ -39,7 +39,7 @@ class Zeal_Mapper_Adapter_Zend_Db extends Zeal_Mapper_AdapterAbstract
      */
     static public function setDb($db)
     {
-        self::$_db = $db;
+        self::$db = $db;
     }
 
     /**
@@ -49,22 +49,22 @@ class Zeal_Mapper_Adapter_Zend_Db extends Zeal_Mapper_AdapterAbstract
      */
     public function getDb()
     {
-        if (!self::$_db) {
+        if (!self::$db) {
             // see if there's one in the registry
             if (Zend_Registry::isRegistered('db')) {
                 $db = Zend_Registry::get('db');
                 if ($db instanceof Zend_Db_Adapter_Abstract) {
-                    self::$_db = $db;
+                    self::$db = $db;
                 }
             }
 
-            // we tried!
-            if (!self::$_db) {
+            // we tried, time to error
+            if (!self::$db) {
                 throw new Zeal_Mapper_Exception('No database adapter. Please either set one using '.__CLASS__.'::setDb() or put one in the Zend_Registry using the key \'db\'');
             }
         }
 
-        return self::$_db;
+        return self::$db;
     }
 
     /**
@@ -77,7 +77,7 @@ class Zeal_Mapper_Adapter_Zend_Db extends Zeal_Mapper_AdapterAbstract
     {
         if (strpos($string, '_Model_') !== false) {
             // assuming NAMESPACE_Model_Object format
-        	$string = substr($string, strpos($string, '_Model_') + 7);
+            $string = substr($string, strpos($string, '_Model_') + 7);
         }
 
         // switch this to lcfirst() once supporting PHP 5.2.x is not required
@@ -93,56 +93,56 @@ class Zeal_Mapper_Adapter_Zend_Db extends Zeal_Mapper_AdapterAbstract
      */
     public function getTableName()
     {
-        if (!$this->_tableName) {
+        if (!$this->tableName) {
             if ($this->getMapper()->hasOption('tableName')) {
-	        	$tableName = $this->getMapper()->getOption('tableName');
+                $tableName = $this->getMapper()->getOption('tableName');
 
-	        } else {
-	        	// guess table name based on the name of the class
-	        	$tableName = $this->_classNameToObjectName($this->getMapper()->getClassName());
+            } else {
+                // guess table name based on the name of the class
+                $tableName = $this->_classNameToObjectName($this->getMapper()->getClassName());
 
-	        	$lastLetter = substr($tableName, -1);
-	        	$secondLastLetter = substr($tableName, -2, 1);
-	        	$secondLastLetterIsConsonant = !in_array($secondLastLetter, array('a', 'e', 'i', 'o', 'u'));
+                $lastLetter = substr($tableName, -1);
+                $secondLastLetter = substr($tableName, -2, 1);
+                $secondLastLetterIsConsonant = !in_array($secondLastLetter, array('a', 'e', 'i', 'o', 'u'));
 
-	        	switch ($lastLetter) {
-	        	    case 'y':
-	        	        if ($secondLastLetterIsConsonant) {
-	        	            $tableName = substr($tableName, 0, -1);
-	        	            $tableName .= 'ies';
-	        	        } else {
-	        	            $tableName .= 's';
-	        	        }
-	        	        break;
+                switch ($lastLetter) {
+                    case 'y':
+                        if ($secondLastLetterIsConsonant) {
+                            $tableName = substr($tableName, 0, -1);
+                            $tableName .= 'ies';
+                        } else {
+                            $tableName .= 's';
+                        }
+                        break;
 
-	        	    case 'x':
-	        	        $tableName .= 'es';
-	        	        break;
+                    case 'x':
+                        $tableName .= 'es';
+                        break;
 
-	        	    case 'o':
-	        	        if ($secondLastLetterIsConsonant) {
-	        	            $tableName .= 'es';
-	        	        } else {
-	        	            $tableName .= 's';
-	        	        }
-	        	        break;
+                    case 'o':
+                        if ($secondLastLetterIsConsonant) {
+                            $tableName .= 'es';
+                        } else {
+                            $tableName .= 's';
+                        }
+                        break;
 
-	        	    case 's':
-	        	        if (in_array($secondLastLetter, array('s', 'z', 'h'))) {
-	        	            $tableName .= 'es';
-	        	        }
-	        	        break;
+                    case 's':
+                        if (in_array($secondLastLetter, array('s', 'z', 'h'))) {
+                            $tableName .= 'es';
+                        }
+                        break;
 
-	        	    default:
-	        	        $tableName .= 's';
-	        	        break;
-	        	}
-	        }
+                    default:
+                        $tableName .= 's';
+                        break;
+                }
+            }
 
-	        $this->_tableName = $tableName;
+            $this->tableName = $tableName;
         }
 
-        return $this->_tableName;
+        return $this->tableName;
     }
 
     /**
@@ -157,7 +157,7 @@ class Zeal_Mapper_Adapter_Zend_Db extends Zeal_Mapper_AdapterAbstract
      */
     public function setTableName($tableName)
     {
-        $this->_tableName = $tableName;
+        $this->tableName = $tableName;
 
         return $this;
     }
@@ -169,15 +169,15 @@ class Zeal_Mapper_Adapter_Zend_Db extends Zeal_Mapper_AdapterAbstract
      */
     public function getPrimaryKey()
     {
-        if (!$this->_primaryKey) {
+        if (!$this->primaryKey) {
             if ($this->getMapper()->hasOption('primaryKey')) {
-                $this->_primaryKey = $this->getMapper()->getOption('primaryKey');
+                $this->primaryKey = $this->getMapper()->getOption('primaryKey');
             } else {
-                $this->_primaryKey = $this->_classNameToObjectName($this->getMapper()->getClassName()).'ID';
+                $this->primaryKey = $this->_classNameToObjectName($this->getMapper()->getClassName()).'ID';
             }
         }
 
-        return $this->_primaryKey;
+        return $this->primaryKey;
     }
 
     /**
@@ -188,7 +188,7 @@ class Zeal_Mapper_Adapter_Zend_Db extends Zeal_Mapper_AdapterAbstract
      */
     public function setPrimaryKey($primaryKey)
     {
-        $this->_primaryKey = $primaryKey;
+        $this->primaryKey = $primaryKey;
 
         return $this;
     }
@@ -213,16 +213,16 @@ class Zeal_Mapper_Adapter_Zend_Db extends Zeal_Mapper_AdapterAbstract
      */
     public function count(Zeal_Mapper_QueryInterface $query)
     {
-    	$query->columns('COUNT(*) AS count');
-		$data = $this->getDb()->fetchRow($query);
+        $query->columns('COUNT(*) AS count');
+        $data = $this->getDb()->fetchRow($query);
 
-		// FIXME - this query is returning lots of unnecessary data
+        // FIXME - this query is returning lots of unnecessary data
 
-		if (isset($data['count'])) {
-		    return (int)$data['count'];
-		}
+        if (isset($data['count'])) {
+            return (int)$data['count'];
+        }
 
-		throw new Zeal_Exception('Unable to determine count');
+        throw new Zeal_Exception('Unable to determine count');
     }
 
     /**
@@ -246,9 +246,9 @@ class Zeal_Mapper_Adapter_Zend_Db extends Zeal_Mapper_AdapterAbstract
         $query->limit(1);
 
         try {
-        	$object = $this->getDb()->fetchRow($query);
+            $object = $this->getDb()->fetchRow($query);
         } catch (Zend_Exception $e) {
-        	throw new Zeal_Mapper_Exception('Exception whilst loading object of type \''.$this->getMapper()->getClassName().'\' in adapter: '.$e->getMessage());
+            throw new Zeal_Mapper_Exception('Exception whilst loading object of type \''.$this->getMapper()->getClassName().'\' in adapter: '.$e->getMessage());
         }
 
         return $object;
@@ -260,13 +260,13 @@ class Zeal_Mapper_Adapter_Zend_Db extends Zeal_Mapper_AdapterAbstract
      */
     public function fetchAll(Zeal_Mapper_QueryInterface $query = null)
     {
-    	try {
-        	$objects = $this->getDb()->fetchAll($query);
-    	} catch (Zend_Exception $e) {
-    		throw new Zeal_Mapper_Exception('Exception whilst loading objects of type \''.$this->getMapper()->getClassName().'\' in adapter: '.$e->getMessage());
-    	}
+        try {
+            $objects = $this->getDb()->fetchAll($query);
+        } catch (Zend_Exception $e) {
+            throw new Zeal_Mapper_Exception('Exception whilst loading objects of type \''.$this->getMapper()->getClassName().'\' in adapter: '.$e->getMessage());
+        }
 
-    	return $objects;
+        return $objects;
     }
 
     /**
@@ -278,15 +278,6 @@ class Zeal_Mapper_Adapter_Zend_Db extends Zeal_Mapper_AdapterAbstract
         $data = $this->getMapper()->objectToArray($object);
 
         $this->getDb()->insert($this->getTableName(), $data);
-
-        // populate auto-increment value if appropriate
-        if ($this->getMapper()->getOption('autoIncrement', true)) {
-            $primaryKey = $this->getPrimaryKey();
-            $id = $this->getDb()->lastInsertId();
-            if ($primaryKey && $id) {
-                $object->$primaryKey = $id;
-            }
-        }
 
         return true;
     }
@@ -492,6 +483,19 @@ class Zeal_Mapper_Adapter_Zend_Db extends Zeal_Mapper_AdapterAbstract
         return $lookupTable;
     }
 
+    public function getModelColumnValue($model, $column)
+    {
+        if ($column == 'class') {
+            return get_class($model);
+        } else if ($column == 'classID') {
+            $mapper = Zeal_Orm::getMapper($model);
+            $primaryKey = $mapper->getAdapter()->getPrimaryKey();
+            return $model->$primaryKey;
+        } else {
+            return $model->$column;
+        }
+    }
+
     /**
      * (non-PHPdoc)
      * @see Mapper/Zeal_Mapper_AdapterInterface#populateQueryForAssociation($query, $association)
@@ -503,14 +507,23 @@ class Zeal_Mapper_Adapter_Zend_Db extends Zeal_Mapper_AdapterAbstract
                 $table = $this->getTableName();
                 $key = $association->getOption('primaryKey', $this->getPrimaryKey());
                 $foreignKey = $association->getOption('foreignKey', $key);
-                $value = $association->getModel()->$foreignKey;
+                if (is_array($foreignKey)) {
+                    foreach ($foreignKey as $foreignKeyColumn) {
+                        $value = $association->getModel()->$foreignKeyColumn;
+                        $query->where("$table.$key = ?", $value);
+                    }
 
-		        if (!isset($value)) {
-		            //throw new Zeal_Model_Exception("Unable to populate belongsTo query for association '".$association->getShortname()."' in ".$association->getModelMapper()->getClassName()." as the model has no value for the foreign key '$foreignKey'");
-		            return false;
-		        }
+                    // TODO check for values here?
 
-                $query->where("$table.$key = ?", $association->getModel()->$foreignKey);
+                } else {
+                    $value = $association->getModel()->$foreignKey;
+                    if (!isset($value)) {
+                        //throw new Zeal_Model_Exception("Unable to populate belongsTo query for association '".$association->getShortname()."' in ".$association->getModelMapper()->getClassName()." as the model has no value for the foreign key '$foreignKey'");
+                        return false;
+                    }
+
+                    $query->where("$table.$key = ?", $value);
+                }
                 break;
 
             case Zeal_Model_AssociationInterface::HAS_ONE:
@@ -518,10 +531,10 @@ class Zeal_Mapper_Adapter_Zend_Db extends Zeal_Mapper_AdapterAbstract
                 $key = $association->getModelMapper()->getAdapter()->getPrimaryKey();
                 $value = $association->getModel()->$key;
 
-        		if (!isset($value)) {
-		            //throw new Zeal_Model_Exception("Unable to populate belongsTo query for association '".$association->getShortname()."' in ".$association->getModelMapper()->getClassName()." as the field '$key' has no value in model");
-		            return false;
-		        }
+                if (!isset($value)) {
+                    //throw new Zeal_Model_Exception("Unable to populate belongsTo query for association '".$association->getShortname()."' in ".$association->getModelMapper()->getClassName()." as the field '$key' has no value in model");
+                    return false;
+                }
 
                 $query = $association->getMapper()->query();
                 $query->where("$table.$key = ?", $value);
@@ -531,15 +544,27 @@ class Zeal_Mapper_Adapter_Zend_Db extends Zeal_Mapper_AdapterAbstract
                 $table = $this->getTableName();
                 $key = $association->getOption('primaryKey', $association->getModelMapper()->getAdapter()->getPrimaryKey());
                 $foreignKey = $association->getOption('foreignKey', $key);
-                $value = $association->getModel()->$key;
+                if (is_array($foreignKey)) {
+                    $query = $association->getMapper()->query();
+                    foreach ($foreignKey as $foreignKeyColumn) {
+                        $value = $this->getModelColumnValue($association->getModel(), $foreignKeyColumn);
+                        if (!$value) {
+                            return false;
+                        }
 
-                if (!isset($value)) {
-		            //throw new Zeal_Model_Exception("Unable to populate belongsTo query for association '".$association->getShortname()."' in ".$association->getModelMapper()->getClassName()." as the field '$key' has no value in model");
-		            return false;
-		        }
+                        $query->where("$table.$foreignKeyColumn = ?", $value);
+                    }
 
-                $query = $association->getMapper()->query();
-                $query->where("$table.$foreignKey = ?", $value);
+                } else {
+                    $value = $association->getModel()->$key;
+                    if (!isset($value)) {
+                        //throw new Zeal_Model_Exception("Unable to populate belongsTo query for association '".$association->getShortname()."' in ".$association->getModelMapper()->getClassName()." as the field '$key' has no value in model");
+                        return false;
+                    }
+
+                    $query = $association->getMapper()->query();
+                    $query->where("$table.$foreignKey = ?", $value);
+                }
                 break;
 
             case Zeal_Model_AssociationInterface::HAS_AND_BELONGS_TO_MANY:
@@ -547,19 +572,22 @@ class Zeal_Mapper_Adapter_Zend_Db extends Zeal_Mapper_AdapterAbstract
 
                 $tableName = $this->getTableName();
                 $foreignKey = $association->getOption('foreignKey', $association->getModelMapper()->getAdapter()->getPrimaryKey());
+                $foreignKeyValueColumn = $association->getOption('foreignKeyValueColumn', $foreignKey);
                 $associationForeignKey = $association->getOption('associationForeignKey', $this->getMapper()->getAdapter()->getPrimaryKey());
                 $associationKey = $association->getMapper()->getAdapter()->getPrimaryKey();
 
-                $value = $association->getModel()->{$foreignKey};
+                $value = $association->getModel()->{$foreignKeyValueColumn};
 
                 if (empty($value)) {
-                	return false;
+                    return false;
                 }
 
                 $query = $association->getMapper()->query();
 
-                $query->joinInner($lookupTable, "$lookupTable.$associationForeignKey = $tableName.$associationKey", '')
-                    ->where("$lookupTable.$foreignKey = ?", $value);
+                $joinClause = $association->getOption('joinClause', "$lookupTable.$associationForeignKey = $tableName.$associationKey");
+
+                $query->joinInner($lookupTable, $joinClause, '')
+                      ->where("$lookupTable.$foreignKey = ?", $value);
                 break;
         }
 

@@ -370,6 +370,10 @@ abstract class Zeal_MapperAbstract implements Zeal_MapperInterface
                         		$data[$field] = new Zeal_Date($value.' 12:00:00');
                         	}
                             break;
+
+                        case 'ip':
+                            $data[$field] = long2ip($data[$field]);
+                            break;
                     }
                 }
             }
@@ -433,11 +437,14 @@ abstract class Zeal_MapperAbstract implements Zeal_MapperInterface
                     if ($fieldType == 'serialized') {
                         $value = serialize($value);
 
+                    } else if ($fieldType == 'ip') {
+                        $value = ip2long($value);
+
                     } else if (is_object($value) && $value instanceof Zeal_Mapper_FieldTypeInterface) {
                         // convert custom field types into a format for storage
                         $value = $value->getValueForStorage($this->getAdapter());
                         if (!is_scalar($value)) {
-                            throw new Zeal_Mapper_Exception(get_class($value).'::getValueForStorage() must return a scalar value');
+                            throw new Zeal_Mapper_Exception(get_class($value).'::getVafunction objectToArraylueForStorage() must return a scalar value');
                         }
                     }
                 }

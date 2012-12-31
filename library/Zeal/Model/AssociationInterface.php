@@ -23,4 +23,6 @@ interface Zeal_Model_AssociationInterface
     public function getOption($key, $default = null);
 
     public function getOptions();
+
+    public function buildQuery();
 }
