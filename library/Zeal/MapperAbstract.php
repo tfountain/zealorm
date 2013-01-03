@@ -481,13 +481,13 @@ abstract class Zeal_MapperAbstract implements Zeal_MapperInterface
      * (non-PHPdoc)
      * @see Zeal_MapperInterface#find($id)
      */
-    public function find($id)
+    public function find($id, $query = null)
     {
         if ($this->isCached($id)) {
             return $this->getCached($id);
         }
 
-        $data = $this->getAdapter()->find($id);
+        $data = $this->getAdapter()->find($id, $query);
         if ($data) {
             $object = $this->resultToObject($data, false);
 
@@ -567,6 +567,17 @@ abstract class Zeal_MapperAbstract implements Zeal_MapperInterface
     }
 
     /**
+     * Prepares an object for saving
+     *
+     * @param object $object
+     * @return object
+     */
+    public function prepare($object)
+    {
+        return $object;
+    }
+
+    /**
      * Create an object
      *
      * @param object $object
@@ -585,6 +596,8 @@ abstract class Zeal_MapperAbstract implements Zeal_MapperInterface
      */
     public function create($object)
     {
+        $this->prepare($object);
+
         // preSave, preCreate callback
         if ($this->_pluginCallback(array('preSave', 'preCreate'), $object)) {
 
@@ -626,6 +639,8 @@ abstract class Zeal_MapperAbstract implements Zeal_MapperInterface
      */
     public function update($object, $fields = null)
     {
+        $this->prepare($object);
+
         // preSave callback
         $this->_pluginCallback(array('preSave', 'preUpdate'), $object);
 

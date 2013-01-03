@@ -229,9 +229,11 @@ class Zeal_Mapper_Adapter_Zend_Db extends Zeal_Mapper_AdapterAbstract
      * (non-PHPdoc)
      * @see Mapper/Zeal_Mapper_AdapterInterface#find($id)
      */
-    public function find($id)
+    public function find($id, $query = null)
     {
-        $query = $this->getMapper()->query();
+        if (!$query) {
+            $query = $this->getMapper()->query();
+        }
         $query->where($this->getTableName().'.'.$this->getPrimaryKey().' = ?', $id);
 
         return $this->fetchObject($query);
