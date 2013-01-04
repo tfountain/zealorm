@@ -290,7 +290,7 @@ class Zeal_Mapper_Adapter_Zend_Db extends Zeal_Mapper_AdapterAbstract
      * @param $object
      * @return string
      */
-    protected function _buildWhereClause($object)
+    public function buildWhereClause($object)
     {
         $key = $this->getPrimaryKey();
         if (is_array($key)) {
@@ -315,7 +315,7 @@ class Zeal_Mapper_Adapter_Zend_Db extends Zeal_Mapper_AdapterAbstract
     {
         $data = $this->getMapper()->objectToArray($object, $fields);
 
-        $this->getDb()->update($this->getTableName(), $data, $this->_buildWhereClause($object));
+        $this->getDb()->update($this->getTableName(), $data, $this->buildWhereClause($object));
 
         return true;
     }
@@ -350,7 +350,7 @@ class Zeal_Mapper_Adapter_Zend_Db extends Zeal_Mapper_AdapterAbstract
      */
     public function delete($object)
     {
-        $this->getDb()->delete($this->getTableName(), $this->_buildWhereClause($object));
+        $this->getDb()->delete($this->getTableName(), $this->buildWhereClause($object));
 
         return true;
     }
@@ -578,18 +578,31 @@ class Zeal_Mapper_Adapter_Zend_Db extends Zeal_Mapper_AdapterAbstract
                 $associationForeignKey = $association->getOption('associationForeignKey', $this->getMapper()->getAdapter()->getPrimaryKey());
                 $associationKey = $association->getMapper()->getAdapter()->getPrimaryKey();
 
-                $value = $association->getModel()->{$foreignKeyValueColumn};
-
-                if (empty($value)) {
-                    return false;
-                }
-
-                $query = $association->getMapper()->query();
-
                 $joinClause = $association->getOption('joinClause', "$lookupTable.$associationForeignKey = $tableName.$associationKey");
 
-                $query->joinInner($lookupTable, $joinClause, '')
-                      ->where("$lookupTable.$foreignKey = ?", $value);
+                if (is_array($foreignKey)) {
+                    $query = $association->getMapper()->query();
+                    foreach ($foreignKey as $foreignKeyColumn) {
+                        $value = $this->getModelColumnValue($association->getModel(), $foreignKeyColumn);
+                        if (!$value) {
+                            return false;
+                        }
+
+                        $query->where("$lookupTable.$foreignKeyColumn = ?", $value);
+                    }
+
+                } else {
+                    $value = $this->getModelColumnValue($association->getModel(), $foreignKeyValueColumn);
+
+                    if (empty($value)) {
+                        return false;
+                    }
+
+                    $query = $association->getMapper()->query();
+                    $query->where("$lookupTable.$foreignKey = ?", $value);
+                }
+
+                $query->joinInner($lookupTable, $joinClause, '');
                 break;
         }
 
