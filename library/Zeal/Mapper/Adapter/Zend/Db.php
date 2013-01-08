@@ -279,9 +279,18 @@ class Zeal_Mapper_Adapter_Zend_Db extends Zeal_Mapper_AdapterAbstract
     {
         $data = $this->getMapper()->objectToArray($object);
 
-        $this->getDb()->insert($this->getTableName(), $data);
+        if ($this->getDb()->insert($this->getTableName(), $data)) {
+            // if there's an auto-incrementing key, populate it
+            $primaryKey = $this->getMapper()->getOption('primaryKey');
+            if ($primaryKey && (!$this->getMapper()->hasOption('autoIncrement') || $this->getMapper()->getOption('autoIncrement'))) {
+                $id = $this->getDb()->lastInsertId();
+                $object->$primaryKey = $id;
+            }
 
-        return true;
+            return true;
+        } else {
+            return false;
+        }
     }
 
     /**
@@ -315,9 +324,11 @@ class Zeal_Mapper_Adapter_Zend_Db extends Zeal_Mapper_AdapterAbstract
     {
         $data = $this->getMapper()->objectToArray($object, $fields);
 
-        $this->getDb()->update($this->getTableName(), $data, $this->buildWhereClause($object));
-
-        return true;
+        if ($this->getDb()->update($this->getTableName(), $data, $this->buildWhereClause($object))) {
+            return true;
+        } else {
+            return false;
+        }
     }
 
     /**
@@ -350,9 +361,11 @@ class Zeal_Mapper_Adapter_Zend_Db extends Zeal_Mapper_AdapterAbstract
      */
     public function delete($object)
     {
-        $this->getDb()->delete($this->getTableName(), $this->buildWhereClause($object));
-
-        return true;
+        if ($this->getDb()->delete($this->getTableName(), $this->buildWhereClause($object))) {
+            return true;
+        } else {
+            return false;
+        }
     }
 
     /**
