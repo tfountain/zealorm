@@ -444,7 +444,7 @@ abstract class Zeal_MapperAbstract implements Zeal_MapperInterface
                         // convert custom field types into a format for storage
                         $value = $value->getValueForStorage($this->getAdapter());
                         if (!is_scalar($value)) {
-                            throw new Zeal_Mapper_Exception(get_class($value).'::getVafunction objectToArraylueForStorage() must return a scalar value');
+                            throw new Zeal_Mapper_Exception(get_class($value).'::objectToArray() $value->getValueForStorage() must return a scalar value');
                         }
                     }
                 }
@@ -465,11 +465,10 @@ abstract class Zeal_MapperAbstract implements Zeal_MapperInterface
      */
     protected function _saveAssociated($object)
     {
-        $associationsToSave = $object->getUnsavedAssociationData();
+        $associationsToSave = $object->getAssociationsWithUnsavedData();
         if ($associationsToSave) {
             $nestableAssociations = $object->getNestableAssociations();
-            foreach ($associationsToSave as $associationShortname => $associationData) {
-                $association = $object->getAssociation($associationShortname);
+            foreach ($associationsToSave as $associationShortname => $association) {
                 if (in_array($association, $nestableAssociations)) {
                     $this->getAdapter()->saveAssociatedForAssociation($object, $association);
                 }

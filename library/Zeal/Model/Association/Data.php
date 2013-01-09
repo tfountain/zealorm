@@ -15,7 +15,7 @@ class Zeal_Model_Association_Data extends Zeal_Model_Association_DataAbstract im
      *
      * @var Zeal_Mapper_QueryInterface
      */
-    protected $_query;
+    protected $query;
 
     /**
      * Holds the loaded data
@@ -23,7 +23,6 @@ class Zeal_Model_Association_Data extends Zeal_Model_Association_DataAbstract im
      * @var object
      */
     protected $object;
-
 
     public function __get($var)
     {
@@ -66,11 +65,8 @@ class Zeal_Model_Association_Data extends Zeal_Model_Association_DataAbstract im
      */
     public function query()
     {
-        if (!$this->_query) {
-            $this->_query = $this->getMapper()->buildAssociationQuery($this->getAssociation());
-        }
-
-        return $this->_query;
+        // this function will possibly be deprecated in future
+        return $this->getAssociation()->buildQuery();
     }
 
     /**

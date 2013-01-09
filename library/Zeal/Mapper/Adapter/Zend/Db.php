@@ -324,11 +324,9 @@ class Zeal_Mapper_Adapter_Zend_Db extends Zeal_Mapper_AdapterAbstract
     {
         $data = $this->getMapper()->objectToArray($object, $fields);
 
-        if ($this->getDb()->update($this->getTableName(), $data, $this->buildWhereClause($object))) {
-            return true;
-        } else {
-            return false;
-        }
+        $this->getDb()->update($this->getTableName(), $data, $this->buildWhereClause($object));
+
+        return true;
     }
 
     /**
@@ -380,9 +378,6 @@ class Zeal_Mapper_Adapter_Zend_Db extends Zeal_Mapper_AdapterAbstract
                 break;
 
             case Zeal_Model_AssociationInterface::HAS_ONE:
-                // TODO
-                break;
-
             case Zeal_Model_AssociationInterface::HAS_MANY:
                 // populate the foreign key
                 $key = $association->getModelMapper()->getAdapter()->getPrimaryKey();
@@ -422,7 +417,17 @@ class Zeal_Mapper_Adapter_Zend_Db extends Zeal_Mapper_AdapterAbstract
                 break;
 
             case Zeal_Model_AssociationInterface::HAS_MANY:
-                $objectsProcessed = array();
+                $primaryKey = $association->getMapper()->getAdapter()->getPrimaryKey();
+                $baseQuery = $association->buildQuery();
+                $baseQuery->reset(Zend_Db_Select::COLUMNS)
+                      ->reset(Zend_Db_Select::ORDER);
+
+                if (!$primaryKey) {
+                    // delete all the objects initiallys
+                    $association->getMapper()->getAdapter()->getDb()->query("DELETE ".$baseQuery);
+                }
+
+                $idsProcessed = array();
                 $associatedObjects = $object->{$association->getShortname()}->getObjects();
                 foreach ($associatedObjects as $associatedObject) {
                     if ($associatedObject->isDirty()) {
@@ -435,22 +440,18 @@ class Zeal_Mapper_Adapter_Zend_Db extends Zeal_Mapper_AdapterAbstract
                         }
                     }
 
-                    if ($association->getMapper()->getAdapter()->getPrimaryKey()) {
-                        $objectsProcessed[] = $associatedObject->{$association->getMapper()->getAdapter()->getPrimaryKey()};
+                    if ($primaryKey) {
+                        $idsProcessed[] = $associatedObject->$primaryKey;
                     }
                 }
 
-                if (count($objectsProcessed) > 0 && $association->getMapper()->getAdapter()->getPrimaryKey()) {
+                if ($primaryKey) {
                     // delete any objects that weren't submitted
                     // TODO could use some refactoring
                     $associationKey = $association->getMapper()->getAdapter()->getPrimaryKey();
+                    $baseQuery->where("$associationKey NOT IN (?)", $idsProcessed);
 
-                    $query = $association->getMapper()->buildAssociationQuery($association);
-                    $query->reset(Zend_Db_Select::COLUMNS)
-                          ->reset(Zend_Db_Select::ORDER)
-                          ->where("$associationKey NOT IN (?)", $objectsProcessed);
-
-                    $association->getMapper()->getAdapter()->getDb()->query("DELETE ".$query);
+                    $association->getMapper()->getAdapter()->getDb()->query("DELETE ".$baseQuery);
                 }
                 break;
 
@@ -459,6 +460,7 @@ class Zeal_Mapper_Adapter_Zend_Db extends Zeal_Mapper_AdapterAbstract
                 $foreignKey = $association->getOption('foreignKey', $this->getMapper()->getAdapter()->getPrimaryKey());
                 $associationForeignKey = $association->getOption('associationForeignKey', $association->getMapper()->getAdapter()->getPrimaryKey());
 
+                $idsProcessed = array();
                 $associatedObjects = $object->{$association->getShortname()}->getObjects();
                 foreach ($associatedObjects as $associatedObject) {
                     $objectKeyValue = $object->{$this->getPrimaryKey()};
@@ -475,6 +477,18 @@ class Zeal_Mapper_Adapter_Zend_Db extends Zeal_Mapper_AdapterAbstract
                             $associationForeignKey => $associatedObjectKeyValue
                         ));
                     }
+                    $idsProcessed[] = $associatedObjectKeyValue;
+                }
+
+                if (count($idsProcessed) > 0) {
+                    // remove lookups for any objects that haven't been updated
+                    $this->getDb()->query(
+                        "DELETE FROM $lookupTable WHERE $foreignKey = ? AND $associationForeignKey NOT IN (".$this->getDb()->quote($idsProcessed).")",
+                        array($objectKeyValue)
+                    );
+                } else {
+                    // remove all the lookups
+                    $this->getDb()->query("DELETE FROM $lookupTable WHERE $foreignKey = ?", $objectKeyValue);
                 }
                 break;
         }

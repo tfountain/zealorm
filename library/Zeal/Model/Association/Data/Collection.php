@@ -36,7 +36,7 @@ class Zeal_Model_Association_Data_Collection extends Zeal_Model_Association_Data
      *
      * @var Zeal_Mapper_QueryInterface
      */
-    protected $_query;
+    protected $query;
 
     /**
      * Returns the objects for use by IteratorAggregate
@@ -172,6 +172,7 @@ class Zeal_Model_Association_Data_Collection extends Zeal_Model_Association_Data
      */
     public function populate($data)
     {
+        $this->dirty = true;
         $className = $this->getAssociation()->getClassName();
 
         if (is_array($data)) {
@@ -229,6 +230,9 @@ class Zeal_Model_Association_Data_Collection extends Zeal_Model_Association_Data
 
         $this->objects[] = $object;
 
+        // mark the collection as dirty so the object will be saved
+        $this->dirty = true;
+
         return $object;
     }
 
@@ -261,11 +265,11 @@ class Zeal_Model_Association_Data_Collection extends Zeal_Model_Association_Data
      */
     public function query()
     {
-        if (!$this->_query) {
-            $this->_query = $this->getMapper()->buildAssociationQuery($this->getAssociation());
+        if (!$this->query) {
+            $this->query = $this->getMapper()->buildAssociationQuery($this->getAssociation());
         }
 
-        return $this->_query;
+        return $this->query;
     }
 
     /**
@@ -276,7 +280,7 @@ class Zeal_Model_Association_Data_Collection extends Zeal_Model_Association_Data
      */
     public function setQuery(Zeal_Mapper_QueryInterface $query)
     {
-        $this->_query = $query;
+        $this->query = $query;
 
         return $this;
     }
@@ -349,6 +353,8 @@ class Zeal_Model_Association_Data_Collection extends Zeal_Model_Association_Data
             $this->load();
         }
 
+        $this->dirty = true;
+
         if ($offset === null) {
             $this->objects[] = $value;
         } else {
@@ -380,6 +386,8 @@ class Zeal_Model_Association_Data_Collection extends Zeal_Model_Association_Data
     	if (!$this->loaded && $this->loadRequired) {
             $this->load();
         }
+
+        $this->dirty = true;
 
         unset($this->objects[$offset]);
     }

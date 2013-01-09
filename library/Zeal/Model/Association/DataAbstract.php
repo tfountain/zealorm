@@ -53,6 +53,14 @@ abstract class Zeal_Model_Association_DataAbstract
     protected $loaded = false;
 
     /**
+     * Whether or not the association data requires saving
+     *
+     * @var boolean
+     */
+    protected $dirty = false;
+
+
+    /**
      *
      * @return Zeal_MapperInterface
      */
@@ -109,5 +117,15 @@ abstract class Zeal_Model_Association_DataAbstract
     public function getModel()
     {
         return $this->model;
+    }
+
+    /**
+     * Returns true if the association data is 'dirty' and requires saving
+     *
+     * @return boolean
+     */
+    public function isDirty()
+    {
+        return $this->dirty;
     }
 }

@@ -20,6 +20,8 @@ interface Zeal_Model_Association_DataInterface
 
     public function populate($data);
 
+    public function isDirty();
+
     public function build(array $data = array());
 
     public function create(array $data = array());
