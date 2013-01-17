@@ -293,8 +293,12 @@ abstract class Zeal_ModelAbstract implements Zeal_ModelInterface, Serializable
 		}
 
 		// and any unsaved association data
-		$data = array_merge($data, $this->getUnsavedAssociationData());
-
+        $unsavedAssociations = $this->getAssociationsWithUnsavedData();
+        if ($unsavedAssociations) {
+            foreach ($unsavedAssociations as $associationShortname => $association) {
+                $data[$associationShortname] = $this->associationData[$associationShortname];
+            }
+        }
 
 		return serialize($data);
 	}

@@ -212,7 +212,7 @@ class Zeal_Model_Association_Data_Collection extends Zeal_Model_Association_Data
         }
     }
 
-   /**2
+   /**
      *
      * @param array $data
      * @return object
@@ -416,5 +416,28 @@ class Zeal_Model_Association_Data_Collection extends Zeal_Model_Association_Data
         }
 
         return count($this->objects);
+    }
+
+    /**
+     * Returns true if the association data is 'dirty' and requires saving
+     *
+     * @return boolean
+     */
+    public function isDirty()
+    {
+        if ($this->dirty) {
+            return true;
+        }
+
+        // otherwise we need to check each of the objects in this collection
+        if ($this->objects) {
+            foreach ($this->objects as $object) {
+                if ($object->isDirty()) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 }
