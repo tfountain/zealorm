@@ -4,7 +4,7 @@
  *
  * @category   Zeal
  * @package    Zeal ORM
- * @copyright  Copyright (c) 2010-2012 Tim Fountain (http://tfountain.co.uk/)
+ * @copyright  Copyright (c) 2010-2013 Tim Fountain (http://tfountain.co.uk/)
  * @license    New BSD License - http://tfountain.co.uk/license/new-bsd
  */
 
@@ -323,8 +323,9 @@ class Zeal_Mapper_Adapter_Zend_Db extends Zeal_Mapper_AdapterAbstract
     public function update($object, $fields = null)
     {
         $data = $this->getMapper()->objectToArray($object, $fields);
-
-        $this->getDb()->update($this->getTableName(), $data, $this->buildWhereClause($object));
+        if ($data) {
+            $this->getDb()->update($this->getTableName(), $data, $this->buildWhereClause($object));
+        }
 
         return true;
     }

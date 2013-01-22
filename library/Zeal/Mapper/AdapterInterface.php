@@ -4,7 +4,7 @@
  *
  * @category   Zeal
  * @package    Zeal ORM
- * @copyright  Copyright (c) 2010-2012 Tim Fountain (http://tfountain.co.uk/)
+ * @copyright  Copyright (c) 2010-2013 Tim Fountain (http://tfountain.co.uk/)
  * @license    New BSD License - http://tfountain.co.uk/license/new-bsd
  */
 
@@ -108,7 +108,7 @@ interface Zeal_Mapper_AdapterInterface
 
     /**
      * Saves associated objects for a specific association
-     * 
+     *
      * @param object $object the object which the association belongs to
      * @param Zeal_Model_AssociationInterface $association the association itself
      * @return boolean

@@ -4,7 +4,7 @@
  *
  * @category   Zeal
  * @package    Zeal ORM
- * @copyright  Copyright (c) 2010-2012 Tim Fountain (http://tfountain.co.uk/)
+ * @copyright  Copyright (c) 2010-2013 Tim Fountain (http://tfountain.co.uk/)
  * @license    New BSD License - http://tfountain.co.uk/license/new-bsd
  */
 
@@ -190,17 +190,8 @@ class Zeal_Model_Association_Data_Collection extends Zeal_Model_Association_Data
                     }
 
                 } else if (is_numeric($data[0]) && ($this->getAssociation() instanceof Zeal_Model_Association_HasAndBelongsToMany)) {
-                    // ID for a HABTM association - for now we just load the objects TODO
-                    /*foreach ($data as $id) {
-                        $object = $this->getMapper()->find($id);
-                        if ($object) {
-                            $this->objects[] = $object;
-                            $this->objectIDs[] = $id;
-                        } else {
-                            // error?
-                        }
-                    }*/
                     $this->objectIDs = $data;
+                    $this->clearCached();
 
                 } else {
                     throw new Zeal_Model_Exception('Invalid data in assignment to data collection');

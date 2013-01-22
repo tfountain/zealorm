@@ -4,7 +4,7 @@
  *
  * @category   Zeal
  * @package    Zeal ORM
- * @copyright  Copyright (c) 2010-2012 Tim Fountain (http://tfountain.co.uk/)
+ * @copyright  Copyright (c) 2010-2013 Tim Fountain (http://tfountain.co.uk/)
  * @license    New BSD License - http://tfountain.co.uk/license/new-bsd
  */
 
@@ -463,13 +463,13 @@ abstract class Zeal_MapperAbstract implements Zeal_MapperInterface
      * @param $object
      * @return boolean
      */
-    protected function _saveAssociated($object)
+    protected function _saveAssociated($object, $fields = null)
     {
         $associationsToSave = $object->getAssociationsWithUnsavedData();
         if ($associationsToSave) {
             $nestableAssociations = $object->getNestableAssociations();
             foreach ($associationsToSave as $associationShortname => $association) {
-                if (in_array($association, $nestableAssociations)) {
+                if (in_array($association, $nestableAssociations) || (is_array($fields) && isset($fields[$associationShortname]))) {
                     $this->getAdapter()->saveAssociatedForAssociation($object, $association);
                 }
             }
@@ -643,9 +643,9 @@ abstract class Zeal_MapperAbstract implements Zeal_MapperInterface
         // preSave callback
         $this->_pluginCallback(array('preSave', 'preUpdate'), $object);
 
-        if ($this->_update($object)) {
+        if ($this->_update($object, $fields)) {
             // create/update any associated objects
-            $this->_saveAssociated($object);
+            $this->_saveAssociated($object, $fields);
 
             // postSave callback
             $this->_pluginCallback(array('postSave', 'postUpdate'), $object);
