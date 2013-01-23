@@ -119,11 +119,11 @@ abstract class Zeal_MapperAbstract implements Zeal_MapperInterface
      */
     public function hasOption($key)
     {
-    	if (array_key_exists($key, $this->_options)) {
-    		return true;
-    	}
+        if (array_key_exists($key, $this->_options)) {
+            return true;
+        }
 
-    	return false;
+        return false;
     }
 
     /**
@@ -132,11 +132,11 @@ abstract class Zeal_MapperAbstract implements Zeal_MapperInterface
      */
     public function getOption($key, $default = false)
     {
-    	if ($this->hasOption($key)) {
-    		return $this->_options[$key];
-    	}
+        if ($this->hasOption($key)) {
+            return $this->_options[$key];
+        }
 
-    	return $default;
+        return $default;
     }
 
     /**
@@ -356,19 +356,19 @@ abstract class Zeal_MapperAbstract implements Zeal_MapperInterface
                             break;
 
                         case 'datetime':
-                        	if ($value instanceof Zeal_DateTime) {
-                        		$data[$field] = $value;
-                        	} else {
-                            	$data[$field] = new Zeal_DateTime($value);
-                        	}
+                            if ($value instanceof Zeal_DateTime) {
+                                $data[$field] = $value;
+                            } else {
+                                $data[$field] = new Zeal_DateTime($value);
+                            }
                             break;
 
                         case 'date':
-                        	if ($value instanceof Zeal_Date) {
-                        		$data[$field] = $value;
-                        	} else {
-                        		$data[$field] = new Zeal_Date($value.' 12:00:00');
-                        	}
+                            if ($value instanceof Zeal_Date) {
+                                $data[$field] = $value;
+                            } else {
+                                $data[$field] = new Zeal_Date($value.' 12:00:00');
+                            }
                             break;
 
                         case 'ip':
@@ -412,9 +412,20 @@ abstract class Zeal_MapperAbstract implements Zeal_MapperInterface
      */
     public function objectToArray($object, $fields = null)
     {
-        // default to all fields
-        if (!$fields) {
-            $fields = $this->getFields();
+        $allFields = $this->getFields();
+        if ($fields) {
+            // populate the field types to make life easier later
+            $fieldsWithTypes = array();
+            foreach ($fields as $field) {
+                if (isset($allFields[$field])) {
+                    $fieldsWithTypes[$field] = $allFields[$field];
+                }
+            }
+            $fields = $fieldsWithTypes;
+
+        } else {
+            // default to all fields
+            $fields = $allFields;
         }
 
         // start with the raw data from the object
@@ -504,7 +515,7 @@ abstract class Zeal_MapperAbstract implements Zeal_MapperInterface
      */
     public function fetchOne($query)
     {
-		return $this->fetchObject($query);
+        return $this->fetchObject($query);
     }
 
     /**
@@ -535,7 +546,7 @@ abstract class Zeal_MapperAbstract implements Zeal_MapperInterface
         if ($data) {
             $results = array();
             foreach ($data as $result) {
-            	$results[] = $this->resultToObject($result, false);
+                $results[] = $this->resultToObject($result, false);
             }
 
             return $results;
@@ -745,7 +756,7 @@ abstract class Zeal_MapperAbstract implements Zeal_MapperInterface
      */
     public function count(Zeal_Mapper_QueryInterface $query)
     {
-		return $this->getAdapter()->count($query);
+        return $this->getAdapter()->count($query);
     }
 
     /**
@@ -795,7 +806,7 @@ abstract class Zeal_MapperAbstract implements Zeal_MapperInterface
     {
         $query = $this->buildAssociationQuery($data->getAssociation());
         if ($query) {
-        	return $this->fetchObject($query);
+            return $this->fetchObject($query);
         }
 
         return null;
@@ -805,7 +816,7 @@ abstract class Zeal_MapperAbstract implements Zeal_MapperInterface
     {
         $query = $this->buildAssociationQuery($collection->getAssociation());
         if ($query) {
-        	return $this->fetchAll($query);
+            return $this->fetchAll($query);
         }
 
         return array();
