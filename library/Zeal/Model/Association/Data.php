@@ -220,4 +220,35 @@ class Zeal_Model_Association_Data extends Zeal_Model_Association_DataAbstract im
 
         return $this->getMapper()->create($object);
     }
+
+    /**
+     * Returns true if the association data is 'dirty' and requires saving
+     *
+     * @return boolean
+     */
+    public function isDirty()
+    {
+        if ($this->dirty) {
+            return true;
+        }
+
+        if ($this->object && $this->object->isDirty()) {
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     *
+     * @return array
+     */
+    public function getDataForSerialization()
+    {
+        if ($this->object) {
+            return $this->object->getDataForSerialization();
+        }
+
+        return array();
+    }
 }

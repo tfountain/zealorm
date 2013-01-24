@@ -376,6 +376,8 @@ abstract class Zeal_MapperAbstract implements Zeal_MapperInterface
                             break;
                     }
                 }
+            } else if ($object->isAssociation($field)) {
+                // TODO
             }
         }
 
@@ -689,6 +691,8 @@ abstract class Zeal_MapperAbstract implements Zeal_MapperInterface
      */
     public function save($object)
     {
+        $this->prepare($object);
+
         // preSave callback
         $this->_pluginCallback('preSave', $object);
 

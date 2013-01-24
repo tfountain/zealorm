@@ -128,4 +128,14 @@ abstract class Zeal_Model_Association_DataAbstract
     {
         return $this->dirty;
     }
+
+   /**
+     *
+     * @param boolean $dirty
+     */
+    public function setDirty($dirty)
+    {
+        $this->dirty = $dirty;
+    }
+
 }

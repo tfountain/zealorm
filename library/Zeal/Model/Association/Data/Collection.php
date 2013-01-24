@@ -431,4 +431,21 @@ class Zeal_Model_Association_Data_Collection extends Zeal_Model_Association_Data
 
         return false;
     }
+
+    /**
+     *
+     * @return array
+     */
+    public function getDataForSerialization()
+    {
+        $data = array();
+
+        if ($this->objects) {
+            foreach ($this->objects as $object) {
+                $data[] = $object->getDataForSerialization();
+            }
+        }
+
+        return $data;
+    }
 }
