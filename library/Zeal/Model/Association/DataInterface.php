@@ -4,7 +4,7 @@
  *
  * @category   Zeal
  * @package    Zeal ORM
- * @copyright  Copyright (c) 2010-2012 Tim Fountain (http://tfountain.co.uk/)
+ * @copyright  Copyright (c) 2010-2013 Tim Fountain (http://tfountain.co.uk/)
  * @license    New BSD License - http://tfountain.co.uk/license/new-bsd
  */
 
@@ -20,7 +20,11 @@ interface Zeal_Model_Association_DataInterface
 
     public function populate($data);
 
+    public function isDirty();
+
     public function build(array $data = array());
 
     public function create(array $data = array());
+
+    public function getDataForSerialization();
 }

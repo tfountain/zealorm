@@ -4,7 +4,7 @@
  *
  * @category   Zeal
  * @package    Zeal ORM
- * @copyright  Copyright (c) 2010-2012 Tim Fountain (http://tfountain.co.uk/)
+ * @copyright  Copyright (c) 2010-2013 Tim Fountain (http://tfountain.co.uk/)
  * @license    New BSD License - http://tfountain.co.uk/license/new-bsd
  */
 
@@ -36,7 +36,7 @@ class Zeal_Model_Association_Data_Collection extends Zeal_Model_Association_Data
      *
      * @var Zeal_Mapper_QueryInterface
      */
-    protected $_query;
+    protected $query;
 
     /**
      * Returns the objects for use by IteratorAggregate
@@ -172,6 +172,7 @@ class Zeal_Model_Association_Data_Collection extends Zeal_Model_Association_Data
      */
     public function populate($data)
     {
+        $this->dirty = true;
         $className = $this->getAssociation()->getClassName();
 
         if (is_array($data)) {
@@ -189,17 +190,8 @@ class Zeal_Model_Association_Data_Collection extends Zeal_Model_Association_Data
                     }
 
                 } else if (is_numeric($data[0]) && ($this->getAssociation() instanceof Zeal_Model_Association_HasAndBelongsToMany)) {
-                    // ID for a HABTM association - for now we just load the objects TODO
-                    /*foreach ($data as $id) {
-                        $object = $this->getMapper()->find($id);
-                        if ($object) {
-                            $this->objects[] = $object;
-                            $this->objectIDs[] = $id;
-                        } else {
-                            // error?
-                        }
-                    }*/
                     $this->objectIDs = $data;
+                    $this->clearCached();
 
                 } else {
                     throw new Zeal_Model_Exception('Invalid data in assignment to data collection');
@@ -211,7 +203,7 @@ class Zeal_Model_Association_Data_Collection extends Zeal_Model_Association_Data
         }
     }
 
-   /**2
+   /**
      *
      * @param array $data
      * @return object
@@ -228,6 +220,9 @@ class Zeal_Model_Association_Data_Collection extends Zeal_Model_Association_Data
         }
 
         $this->objects[] = $object;
+
+        // mark the collection as dirty so the object will be saved
+        $this->dirty = true;
 
         return $object;
     }
@@ -261,11 +256,11 @@ class Zeal_Model_Association_Data_Collection extends Zeal_Model_Association_Data
      */
     public function query()
     {
-        if (!$this->_query) {
-            $this->_query = $this->getMapper()->buildAssociationQuery($this->getAssociation());
+        if (!$this->query) {
+            $this->query = $this->getMapper()->buildAssociationQuery($this->getAssociation());
         }
 
-        return $this->_query;
+        return $this->query;
     }
 
     /**
@@ -276,7 +271,7 @@ class Zeal_Model_Association_Data_Collection extends Zeal_Model_Association_Data
      */
     public function setQuery(Zeal_Mapper_QueryInterface $query)
     {
-        $this->_query = $query;
+        $this->query = $query;
 
         return $this;
     }
@@ -349,6 +344,8 @@ class Zeal_Model_Association_Data_Collection extends Zeal_Model_Association_Data
             $this->load();
         }
 
+        $this->dirty = true;
+
         if ($offset === null) {
             $this->objects[] = $value;
         } else {
@@ -381,6 +378,8 @@ class Zeal_Model_Association_Data_Collection extends Zeal_Model_Association_Data
             $this->load();
         }
 
+        $this->dirty = true;
+
         unset($this->objects[$offset]);
     }
 
@@ -408,5 +407,45 @@ class Zeal_Model_Association_Data_Collection extends Zeal_Model_Association_Data
         }
 
         return count($this->objects);
+    }
+
+    /**
+     * Returns true if the association data is 'dirty' and requires saving
+     *
+     * @return boolean
+     */
+    public function isDirty()
+    {
+        if ($this->dirty) {
+            return true;
+        }
+
+        // otherwise we need to check each of the objects in this collection
+        if ($this->objects) {
+            foreach ($this->objects as $object) {
+                if ($object->isDirty()) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     *
+     * @return array
+     */
+    public function getDataForSerialization()
+    {
+        $data = array();
+
+        if ($this->objects) {
+            foreach ($this->objects as $object) {
+                $data[] = $object->getDataForSerialization();
+            }
+        }
+
+        return $data;
     }
 }

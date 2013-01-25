@@ -4,7 +4,7 @@
  *
  * @category   Zeal
  * @package    Zeal ORM
- * @copyright  Copyright (c) 2010-2012 Tim Fountain (http://tfountain.co.uk/)
+ * @copyright  Copyright (c) 2010-2013 Tim Fountain (http://tfountain.co.uk/)
  * @license    New BSD License - http://tfountain.co.uk/license/new-bsd
  */
 
@@ -51,6 +51,14 @@ abstract class Zeal_Model_Association_DataAbstract
      * @var boolean
      */
     protected $loaded = false;
+
+    /**
+     * Whether or not the association data requires saving
+     *
+     * @var boolean
+     */
+    protected $dirty = false;
+
 
     /**
      *
@@ -110,4 +118,24 @@ abstract class Zeal_Model_Association_DataAbstract
     {
         return $this->model;
     }
+
+    /**
+     * Returns true if the association data is 'dirty' and requires saving
+     *
+     * @return boolean
+     */
+    public function isDirty()
+    {
+        return $this->dirty;
+    }
+
+   /**
+     *
+     * @param boolean $dirty
+     */
+    public function setDirty($dirty)
+    {
+        $this->dirty = $dirty;
+    }
+
 }

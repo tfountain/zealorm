@@ -4,7 +4,7 @@
  *
  * @category   Zeal
  * @package    Zeal ORM
- * @copyright  Copyright (c) 2010-2012 Tim Fountain (http://tfountain.co.uk/)
+ * @copyright  Copyright (c) 2010-2013 Tim Fountain (http://tfountain.co.uk/)
  * @license    New BSD License - http://tfountain.co.uk/license/new-bsd
  */
 
@@ -119,11 +119,11 @@ abstract class Zeal_MapperAbstract implements Zeal_MapperInterface
      */
     public function hasOption($key)
     {
-    	if (array_key_exists($key, $this->_options)) {
-    		return true;
-    	}
+        if (array_key_exists($key, $this->_options)) {
+            return true;
+        }
 
-    	return false;
+        return false;
     }
 
     /**
@@ -132,11 +132,11 @@ abstract class Zeal_MapperAbstract implements Zeal_MapperInterface
      */
     public function getOption($key, $default = false)
     {
-    	if ($this->hasOption($key)) {
-    		return $this->_options[$key];
-    	}
+        if ($this->hasOption($key)) {
+            return $this->_options[$key];
+        }
 
-    	return $default;
+        return $default;
     }
 
     /**
@@ -356,22 +356,28 @@ abstract class Zeal_MapperAbstract implements Zeal_MapperInterface
                             break;
 
                         case 'datetime':
-                        	if ($value instanceof Zeal_DateTime) {
-                        		$data[$field] = $value;
-                        	} else {
-                            	$data[$field] = new Zeal_DateTime($value);
-                        	}
+                            if ($value instanceof Zeal_DateTime) {
+                                $data[$field] = $value;
+                            } else {
+                                $data[$field] = new Zeal_DateTime($value);
+                            }
                             break;
 
                         case 'date':
-                        	if ($value instanceof Zeal_Date) {
-                        		$data[$field] = $value;
-                        	} else {
-                        		$data[$field] = new Zeal_Date($value.' 12:00:00');
-                        	}
+                            if ($value instanceof Zeal_Date) {
+                                $data[$field] = $value;
+                            } else {
+                                $data[$field] = new Zeal_Date($value.' 12:00:00');
+                            }
+                            break;
+
+                        case 'ip':
+                            $data[$field] = long2ip($data[$field]);
                             break;
                     }
                 }
+            } else if ($object->isAssociation($field)) {
+                // TODO
             }
         }
 
@@ -408,9 +414,20 @@ abstract class Zeal_MapperAbstract implements Zeal_MapperInterface
      */
     public function objectToArray($object, $fields = null)
     {
-        // default to all fields
-        if (!$fields) {
-            $fields = $this->getFields();
+        $allFields = $this->getFields();
+        if ($fields) {
+            // populate the field types to make life easier later
+            $fieldsWithTypes = array();
+            foreach ($fields as $field) {
+                if (isset($allFields[$field])) {
+                    $fieldsWithTypes[$field] = $allFields[$field];
+                }
+            }
+            $fields = $fieldsWithTypes;
+
+        } else {
+            // default to all fields
+            $fields = $allFields;
         }
 
         // start with the raw data from the object
@@ -433,11 +450,14 @@ abstract class Zeal_MapperAbstract implements Zeal_MapperInterface
                     if ($fieldType == 'serialized') {
                         $value = serialize($value);
 
+                    } else if ($fieldType == 'ip') {
+                        $value = ip2long($value);
+
                     } else if (is_object($value) && $value instanceof Zeal_Mapper_FieldTypeInterface) {
                         // convert custom field types into a format for storage
                         $value = $value->getValueForStorage($this->getAdapter());
                         if (!is_scalar($value)) {
-                            throw new Zeal_Mapper_Exception(get_class($value).'::getValueForStorage() must return a scalar value');
+                            throw new Zeal_Mapper_Exception(get_class($value).'::objectToArray() $value->getValueForStorage() must return a scalar value');
                         }
                     }
                 }
@@ -456,14 +476,13 @@ abstract class Zeal_MapperAbstract implements Zeal_MapperInterface
      * @param $object
      * @return boolean
      */
-    protected function _saveAssociated($object)
+    protected function _saveAssociated($object, $fields = null)
     {
-        $associationsToSave = $object->getUnsavedAssociationData();
+        $associationsToSave = $object->getAssociationsWithUnsavedData();
         if ($associationsToSave) {
             $nestableAssociations = $object->getNestableAssociations();
-            foreach ($associationsToSave as $associationShortname => $associationData) {
-                $association = $object->getAssociation($associationShortname);
-                if (in_array($association, $nestableAssociations)) {
+            foreach ($associationsToSave as $associationShortname => $association) {
+                if (in_array($association, $nestableAssociations) || (is_array($fields) && isset($fields[$associationShortname]))) {
                     $this->getAdapter()->saveAssociatedForAssociation($object, $association);
                 }
             }
@@ -474,13 +493,13 @@ abstract class Zeal_MapperAbstract implements Zeal_MapperInterface
      * (non-PHPdoc)
      * @see Zeal_MapperInterface#find($id)
      */
-    public function find($id)
+    public function find($id, $query = null)
     {
         if ($this->isCached($id)) {
             return $this->getCached($id);
         }
 
-        $data = $this->getAdapter()->find($id);
+        $data = $this->getAdapter()->find($id, $query);
         if ($data) {
             $object = $this->resultToObject($data, false);
 
@@ -498,7 +517,7 @@ abstract class Zeal_MapperAbstract implements Zeal_MapperInterface
      */
     public function fetchOne($query)
     {
-		return $this->fetchObject($query);
+        return $this->fetchObject($query);
     }
 
     /**
@@ -529,7 +548,7 @@ abstract class Zeal_MapperAbstract implements Zeal_MapperInterface
         if ($data) {
             $results = array();
             foreach ($data as $result) {
-            	$results[] = $this->resultToObject($result, false);
+                $results[] = $this->resultToObject($result, false);
             }
 
             return $results;
@@ -560,6 +579,17 @@ abstract class Zeal_MapperAbstract implements Zeal_MapperInterface
     }
 
     /**
+     * Prepares an object for saving
+     *
+     * @param object $object
+     * @return object
+     */
+    public function prepare($object)
+    {
+        return $object;
+    }
+
+    /**
      * Create an object
      *
      * @param object $object
@@ -578,6 +608,8 @@ abstract class Zeal_MapperAbstract implements Zeal_MapperInterface
      */
     public function create($object)
     {
+        $this->prepare($object);
+
         // preSave, preCreate callback
         if ($this->_pluginCallback(array('preSave', 'preCreate'), $object)) {
 
@@ -619,12 +651,14 @@ abstract class Zeal_MapperAbstract implements Zeal_MapperInterface
      */
     public function update($object, $fields = null)
     {
+        $this->prepare($object);
+
         // preSave callback
         $this->_pluginCallback(array('preSave', 'preUpdate'), $object);
 
-        if ($this->_update($object)) {
+        if ($this->_update($object, $fields)) {
             // create/update any associated objects
-            $this->_saveAssociated($object);
+            $this->_saveAssociated($object, $fields);
 
             // postSave callback
             $this->_pluginCallback(array('postSave', 'postUpdate'), $object);
@@ -657,6 +691,8 @@ abstract class Zeal_MapperAbstract implements Zeal_MapperInterface
      */
     public function save($object)
     {
+        $this->prepare($object);
+
         // preSave callback
         $this->_pluginCallback('preSave', $object);
 
@@ -724,7 +760,7 @@ abstract class Zeal_MapperAbstract implements Zeal_MapperInterface
      */
     public function count(Zeal_Mapper_QueryInterface $query)
     {
-		return $this->getAdapter()->count($query);
+        return $this->getAdapter()->count($query);
     }
 
     /**
@@ -774,7 +810,7 @@ abstract class Zeal_MapperAbstract implements Zeal_MapperInterface
     {
         $query = $this->buildAssociationQuery($data->getAssociation());
         if ($query) {
-        	return $this->fetchObject($query);
+            return $this->fetchObject($query);
         }
 
         return null;
@@ -784,7 +820,7 @@ abstract class Zeal_MapperAbstract implements Zeal_MapperInterface
     {
         $query = $this->buildAssociationQuery($collection->getAssociation());
         if ($query) {
-        	return $this->fetchAll($query);
+            return $this->fetchAll($query);
         }
 
         return array();

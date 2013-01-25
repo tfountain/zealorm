@@ -1,0 +1,17 @@
+{
+    "name": "tfountain/zealorm",
+    "description": "ORM layer for Zend Framework 1.x applications",
+    "license": "BSD-3-Clause",
+    "autoload": {
+        "psr-0": {"Zeal_": "library/"}
+    },
+    "authors": [{
+            "name": "Tim Fountain",
+            "email": "tim@tfountain.co.uk",
+            "homepage": "http://tfountain.co.uk/",
+            "role": "developer"
+    }],
+    "require": {
+        "php": ">=5.3.3"
+    }
+}

@@ -3,3 +3,6 @@
 .cache
 .settings
 .project
+
+# composer
+composer.lock

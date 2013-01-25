@@ -8,7 +8,7 @@
  * @license    New BSD License - http://tfountain.co.uk/license/new-bsd
  */
 
-interface Zeal_Mapper_FieldTypeInterface
+class Zeal_Exception extends Zend_Exception
 {
-    public function getValueForStorage(Zeal_Mapper_AdapterInterface $adapter);
+
 }

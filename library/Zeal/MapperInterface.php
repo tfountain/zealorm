@@ -4,7 +4,7 @@
  *
  * @category   Zeal
  * @package    Zeal ORM
- * @copyright  Copyright (c) 2010-2012 Tim Fountain (http://tfountain.co.uk/)
+ * @copyright  Copyright (c) 2010-2013 Tim Fountain (http://tfountain.co.uk/)
  * @license    New BSD License - http://tfountain.co.uk/license/new-bsd
  */
 
@@ -55,7 +55,7 @@ interface Zeal_MapperInterface
     /**
      *
      * @param $key
-     * @return unknown_type
+     * @return mixed
      */
     public function getOption($key);
 
@@ -63,9 +63,10 @@ interface Zeal_MapperInterface
      * Loads an object by its unique identifier
      *
      * @param mixed $id
+     * @param Zeal_QueryInterface|null $query
      * @return mixed
      */
-    public function find($id);
+    public function find($id, $query = null);
 
     /**
      * Returns one object matching the supplied query
@@ -90,6 +91,14 @@ interface Zeal_MapperInterface
      * @return array|false
      */
     public function paginate($query = null, $currentPage = 1, $itemsPerPage = 30);
+
+    /**
+     * Prepares the object for saving. Called before create and update
+     *
+     * @param mixed $object
+     * @return mixed
+     */
+    public function prepare($object);
 
     /**
      * Creates an object, with callbacks

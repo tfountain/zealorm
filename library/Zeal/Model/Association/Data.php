@@ -4,7 +4,7 @@
  *
  * @category   Zeal
  * @package    Zeal ORM
- * @copyright  Copyright (c) 2010-2012 Tim Fountain (http://tfountain.co.uk/)
+ * @copyright  Copyright (c) 2010-2013 Tim Fountain (http://tfountain.co.uk/)
  * @license    New BSD License - http://tfountain.co.uk/license/new-bsd
  */
 
@@ -15,7 +15,7 @@ class Zeal_Model_Association_Data extends Zeal_Model_Association_DataAbstract im
      *
      * @var Zeal_Mapper_QueryInterface
      */
-    protected $_query;
+    protected $query;
 
     /**
      * Holds the loaded data
@@ -23,7 +23,6 @@ class Zeal_Model_Association_Data extends Zeal_Model_Association_DataAbstract im
      * @var object
      */
     protected $object;
-
 
     public function __get($var)
     {
@@ -66,11 +65,8 @@ class Zeal_Model_Association_Data extends Zeal_Model_Association_DataAbstract im
      */
     public function query()
     {
-        if (!$this->_query) {
-            $this->_query = $this->getMapper()->buildAssociationQuery($this->getAssociation());
-        }
-
-        return $this->_query;
+        // this function will possibly be deprecated in future
+        return $this->getAssociation()->buildQuery();
     }
 
     /**
@@ -223,5 +219,36 @@ class Zeal_Model_Association_Data extends Zeal_Model_Association_DataAbstract im
     	}
 
         return $this->getMapper()->create($object);
+    }
+
+    /**
+     * Returns true if the association data is 'dirty' and requires saving
+     *
+     * @return boolean
+     */
+    public function isDirty()
+    {
+        if ($this->dirty) {
+            return true;
+        }
+
+        if ($this->object && $this->object->isDirty()) {
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     *
+     * @return array
+     */
+    public function getDataForSerialization()
+    {
+        if ($this->object) {
+            return $this->object->getDataForSerialization();
+        }
+
+        return array();
     }
 }
