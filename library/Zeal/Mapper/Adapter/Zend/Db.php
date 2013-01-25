@@ -539,7 +539,15 @@ class Zeal_Mapper_Adapter_Zend_Db extends Zeal_Mapper_AdapterAbstract
 		        }
 
                 $query = $association->getMapper()->query();
-                $query->where("$table.$foreignKey = ?", $value);
+                if (is_array($foreignKey)) {
+                    foreach ($foreignKey as $foreignKeyColumn) {
+                        $value = $association->getModel()->$foreignKeyColumn;
+                        $query->where("$table.$foreignKeyColumn = ?", $value);
+                    }
+                    
+                } else {
+                    $query->where("$table.$foreignKey = ?", $value);
+                }
                 break;
 
             case Zeal_Model_AssociationInterface::HAS_AND_BELONGS_TO_MANY:

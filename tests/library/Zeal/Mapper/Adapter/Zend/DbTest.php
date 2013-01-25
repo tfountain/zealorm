@@ -139,4 +139,18 @@ class Zeal_Mapper_Adapter_Zend_DbTest extends PHPUnit_Framework_TestCase
         );
     }
 
+    public function testHasManyQueryWithCompoundForeignKey()
+    {
+        $user = new User();
+        $user->hasMany('addresses', array(
+            'className' => 'Address',
+            'foreignKey' => array('class', 'classID')
+        ));
+        $user->userID = 1;
+
+        $this->assertEquals(
+            'SELECT addresses.* FROM addresses WHERE (addresses.class = foo AND addresses.classID = 1)',
+            $user->addresses->query()->__toString()
+        );
+    }
 }
