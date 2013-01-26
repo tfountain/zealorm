@@ -58,6 +58,12 @@ abstract class Zeal_ModelAbstract implements Zeal_ModelInterface, Serializable
     protected $dirty;
 
     /**
+    * @var null|array
+    */
+    protected $listeners;
+
+
+    /**
      * Model constructor
      *
      * @param array $data data to store in the model
@@ -184,6 +190,13 @@ abstract class Zeal_ModelAbstract implements Zeal_ModelInterface, Serializable
 
             $this->associationData[$var]->populate($value);
 
+        } else if (isset($this->listeners[$var])) {
+            $associationShortname = $this->listeners[$var];
+
+            $this->initAssociationData($associationShortname);
+
+            $this->associationData[$associationShortname]->populateFromListener($var, $value);
+
         } else {
             if (!$this->dirty && $this->$var !== $value) {
                 $this->dirty = true;
@@ -226,6 +239,33 @@ abstract class Zeal_ModelAbstract implements Zeal_ModelInterface, Serializable
 
         } else {
             return isset($this->$var);
+        }
+    }
+
+    /**
+     * Magic method called automatically when clone is called. This clones any other objects
+     * referenced by this model
+     *
+     * @return void
+     */
+    public function __clone()
+    {
+        if ($this->associations) {
+            foreach ($this->associations as $shortname => $association) {
+                $this->associations[$shortname] = clone $association;
+            }
+        }
+
+        if ($this->associationData) {
+            foreach ($this->associationData as $associationShortname => $associationData) {
+                $this->associationData[$associationShortname] = clone $associationData;
+            }
+        }
+
+        if ($this->activeBehaviours) {
+            foreach ($this->activeBehaviours as $shortname => $behaviour) {
+                $this->activeBehaviours[$shortname] = clone $behaviour;
+            }
         }
     }
 
@@ -419,8 +459,10 @@ abstract class Zeal_ModelAbstract implements Zeal_ModelInterface, Serializable
 
         // populate the stuff it might need
         $association->setModel($this)
-            ->setShortname($associationShortname)
-            ->setClassName($mapper->getClassName());
+                    ->setShortname($associationShortname)
+                    ->setClassName($mapper->getClassName());
+
+        $association->init();
 
         // store the association in the model
         $this->associations[$associationShortname] = $association;
@@ -769,5 +811,16 @@ abstract class Zeal_ModelAbstract implements Zeal_ModelInterface, Serializable
     public function isDirty()
     {
         return (bool)$this->dirty;
+    }
+
+    public function addListener($listener, $associationShortname)
+    {
+        if (!$this->listeners) {
+            $this->listeners = array();
+        }
+
+        $this->listeners[$listener] = $associationShortname;
+
+        return $this;
     }
 }

@@ -49,7 +49,7 @@ abstract class Zeal_Model_AssociationAbstract implements Zeal_Model_AssociationI
     /**
      * Options passed in to the association
      *
-     * @var unknown_type
+     * @var array
      */
     protected $options = array();
 
@@ -72,6 +72,11 @@ abstract class Zeal_Model_AssociationAbstract implements Zeal_Model_AssociationI
         if ($options) {
             $this->options = $options;
         }
+    }
+
+    public function init()
+    {
+
     }
 
     /**

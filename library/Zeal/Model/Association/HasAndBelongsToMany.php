@@ -17,6 +17,20 @@ class Zeal_Model_Association_HasAndBelongsToMany extends Zeal_Model_AssociationA
      */
     protected $type = Zeal_Model_AssociationInterface::HAS_AND_BELONGS_TO_MANY;
 
+
+    public function init()
+    {
+        // setup the 'keyIDs' listener on the model
+        // FIXME: this is quite DB specific at the moment
+        $adapter = $this->getMapper()->getAdapter();
+        if ($adapter instanceof Zeal_Mapper_Adapter_Zend_Db) {
+            $primaryKey = $adapter->getPrimaryKey();
+            $listener = $primaryKey.'s';
+
+            $this->getModel()->addListener($listener, $this->getShortname());
+        }
+    }
+
     /**
      * Initialises the association data collection object
      *
