@@ -44,13 +44,27 @@ class Zeal_Identity_Map
     /**
      * Returns whether or not an object with the supplied params exists in the map
      *
-     * @param string $class
+     * @param string $className
      * @param mixed $key
      * @return boolean
      */
-    static public function isCached($class, $key)
+    static public function isCached($className, $key)
     {
-        return (isset(self::$_objects[$class]) && isset(self::$_objects[$class][$key]));
+        return (isset(self::$_objects[$className]) && isset(self::$_objects[$className][$key]));
+    }
+
+    /**
+     * Removes a specific object from the cache
+     *
+     * @param string $class
+     * @param mixed $key
+     * @return void
+     */
+    static public function clear($className, $key)
+    {
+        if (self::isCached($className, $key)) {
+            unset(self::$_objects[$className][$key]);
+        }
     }
 
     /**

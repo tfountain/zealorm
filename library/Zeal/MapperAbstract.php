@@ -239,6 +239,17 @@ abstract class Zeal_MapperAbstract implements Zeal_MapperInterface
     }
 
     /**
+     * Removes a specific object from the cache if present
+     *
+     * @param mixed $keyValue
+     * @return void
+     */
+    public function clearCached($keyValue)
+    {
+        Zeal_Identity_Map::clear($this->getClassName(), $keyValue);
+    }
+
+    /**
      * Initialise the plugins
      *
      * @return void
@@ -471,22 +482,60 @@ abstract class Zeal_MapperAbstract implements Zeal_MapperInterface
     }
 
     /**
-     * Save any associated objects
+     * Save any non-dependentassociated objects
+     *
+     * @param type $object
+     * @param type $fields
+     * @return type
+     */
+    protected function saveNonDependentAssociated($object, $fields = null)
+    {
+        $associationsToSave = $object->getAssociationsWithUnsavedData();
+        if ($associationsToSave) {
+            $nestableAssociations = $object->getNestableAssociations();
+            foreach ($associationsToSave as $associationShortname => $association) {
+                if ($association instanceof Zeal_Model_Association_BelongsTo) {
+                    if (in_array($association, $nestableAssociations) || (is_array($fields) && isset($fields[$associationShortname]))) {
+                        $this->getAdapter()->saveAssociatedForAssociation($object, $association);
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Saves any dependent associated objects
+     *
+     * This is called after the object itself has been saved
+     *
+     * @param type $object
+     * @param type $fields
+     * @return type
+     */
+    protected function saveDependentAssociated($object, $fields = null)
+    {
+        $associationsToSave = $object->getAssociationsWithUnsavedData();
+        if ($associationsToSave) {
+            $nestableAssociations = $object->getNestableAssociations();
+            foreach ($associationsToSave as $associationShortname => $association) {
+                if (!($association instanceof Zeal_Model_Association_BelongsTo)) {
+                    if (in_array($association, $nestableAssociations) || (is_array($fields) && isset($fields[$associationShortname]))) {
+                        $this->getAdapter()->saveAssociatedForAssociation($object, $association);
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Save any associated objects - deprecated
      *
      * @param $object
      * @return boolean
      */
     protected function _saveAssociated($object, $fields = null)
     {
-        $associationsToSave = $object->getAssociationsWithUnsavedData();
-        if ($associationsToSave) {
-            $nestableAssociations = $object->getNestableAssociations();
-            foreach ($associationsToSave as $associationShortname => $association) {
-                if (in_array($association, $nestableAssociations) || (is_array($fields) && isset($fields[$associationShortname]))) {
-                    $this->getAdapter()->saveAssociatedForAssociation($object, $association);
-                }
-            }
-        }
+        return $this->saveDependentAssociated($object, $fields);
     }
 
     /**
@@ -612,11 +661,13 @@ abstract class Zeal_MapperAbstract implements Zeal_MapperInterface
 
         // preSave, preCreate callback
         if ($this->_pluginCallback(array('preSave', 'preCreate'), $object)) {
+            //
+            $this->saveNonDependentAssociated($object);
 
             // create
             if ($this->_create($object)) {
                 // create/update any associated objects
-                $this->_saveAssociated($object);
+                $this->saveDependentAssociated($object);
 
                 // postCreate, postSave callback
                 $this->_pluginCallback(array('postCreate', 'postSave'), $object);
@@ -656,9 +707,11 @@ abstract class Zeal_MapperAbstract implements Zeal_MapperInterface
         // preSave callback
         $this->_pluginCallback(array('preSave', 'preUpdate'), $object);
 
+        $this->saveNonDependentAssociated($object, $fields);
+
         if ($this->_update($object, $fields)) {
             // create/update any associated objects
-            $this->_saveAssociated($object, $fields);
+            $this->saveDependentAssociated($object, $fields);
 
             // postSave callback
             $this->_pluginCallback(array('postSave', 'postUpdate'), $object);
@@ -693,12 +746,14 @@ abstract class Zeal_MapperAbstract implements Zeal_MapperInterface
     {
         $this->prepare($object);
 
+        $this->saveNonDependentAssociated($object);
+
         // preSave callback
         $this->_pluginCallback('preSave', $object);
 
         if ($this->_save($object)) {
             // create/update any associated objects
-            $this->_saveAssociated($object);
+            $this->saveDependentAssociated($object);
 
             // postSave callback
             $this->_pluginCallback('postSave', $object);

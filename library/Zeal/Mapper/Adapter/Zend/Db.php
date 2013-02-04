@@ -406,6 +406,14 @@ class Zeal_Mapper_Adapter_Zend_Db extends Zeal_Mapper_AdapterAbstract
                         if (in_array($association, $nestableAssociations)) {
                             $association->populateObject($associatedObject);
                             $association->getMapper()->save($associatedObject);
+
+                            // populate the key of the saved object into the model
+                            $primaryKey = $association->getMapper()->getAdapter()->getPrimaryKey();
+                            $foreignKey = $association->getOption('foreignKey', $primaryKey);
+                            if ($primaryKey) {
+                                $object->$foreignKey = $associatedObject->$primaryKey;
+                            }
+
                         } else {
                             // data for an association that can't be saved!
                             throw new Zeal_Mapper_Exception('Association \''.$association->getShortname().'\' contains data that requires saving but allow nested assignment is set to false');
