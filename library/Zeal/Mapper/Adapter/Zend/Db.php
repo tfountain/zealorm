@@ -461,10 +461,11 @@ class Zeal_Mapper_Adapter_Zend_Db extends Zeal_Mapper_AdapterAbstract
                 $foreignKey = $association->getOption('foreignKey', $this->getMapper()->getAdapter()->getPrimaryKey());
                 $associationForeignKey = $association->getOption('associationForeignKey', $association->getMapper()->getAdapter()->getPrimaryKey());
 
+                $objectKeyValue = $objectKeyValue = $object->{$foreignKey};
+
                 $idsProcessed = array();
                 $associatedObjects = $object->{$association->getShortname()}->getObjects();
                 foreach ($associatedObjects as $associatedObject) {
-                    $objectKeyValue = $object->{$this->getPrimaryKey()};
                     $associatedObjectKeyValue = $associatedObject->{$association->getMapper()->getAdapter()->getPrimaryKey()};
 
                     $count = $this->getDb()->fetchOne("
@@ -586,6 +587,7 @@ class Zeal_Mapper_Adapter_Zend_Db extends Zeal_Mapper_AdapterAbstract
                     }
 
                 } else {
+                    $value = $this->getModelColumnValue($association->getModel(), $foreignKey);
                     $query->where("$table.$foreignKey = ?", $value);
                 }
                 break;

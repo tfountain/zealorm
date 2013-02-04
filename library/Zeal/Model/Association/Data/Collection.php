@@ -173,6 +173,8 @@ class Zeal_Model_Association_Data_Collection extends Zeal_Model_Association_Data
     public function populate($data)
     {
         $this->dirty = true;
+        $this->loadRequired = false;
+
         $className = $this->getAssociation()->getClassName();
 
         if (is_array($data)) {
@@ -203,6 +205,16 @@ class Zeal_Model_Association_Data_Collection extends Zeal_Model_Association_Data
         }
     }
 
+    public function populateFromListener($listener, $data)
+    {
+        if (is_array($data)) {
+            $this->clearCached();
+            $this->loadRequired = true;
+
+            $this->objectIDs = $data;
+        }
+    }
+
    /**
      *
      * @param array $data
@@ -215,7 +227,7 @@ class Zeal_Model_Association_Data_Collection extends Zeal_Model_Association_Data
         $this->getAssociation()->populateObject($object);
         $object->setDirty(true);
 
-        if (!$this->loaded && $this->loadRequired) {
+        if (!$this->getAssociation()->getModelMapper()->getAdapter()->isNewRecord($this->getModel()) && !$this->loaded && $this->loadRequired) {
             $this->load();
         }
 
@@ -420,6 +432,11 @@ class Zeal_Model_Association_Data_Collection extends Zeal_Model_Association_Data
             return true;
         }
 
+        // if we only have objectIDs set we have to assume the collection needs saving
+        if ($this->objectIDs && !$this->objects) {
+            return true;
+        }
+
         // otherwise we need to check each of the objects in this collection
         if ($this->objects) {
             foreach ($this->objects as $object) {
@@ -439,6 +456,11 @@ class Zeal_Model_Association_Data_Collection extends Zeal_Model_Association_Data
     public function getDataForSerialization()
     {
         $data = array();
+
+        // if we only have objectIDs, trigger a load so the correct references are stored
+        if ($this->objectIDs && !$this->objects) {
+            $this->load();
+        }
 
         if ($this->objects) {
             foreach ($this->objects as $object) {
