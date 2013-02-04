@@ -65,13 +65,13 @@ abstract class Zeal_ModelAbstract implements Zeal_ModelInterface, Serializable
      */
     public function __construct(array $data = null)
     {
-        if ($data) {
-            $this->populate($data);
-        }
-
         $this->init();
 
         $this->initBehaviours();
+
+        if ($data) {
+            $this->populate($data);
+        }
     }
 
     /**
