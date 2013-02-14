@@ -381,8 +381,16 @@ class Zeal_Mapper_Adapter_Zend_Db extends Zeal_Mapper_AdapterAbstract
             case Zeal_Model_AssociationInterface::HAS_ONE:
             case Zeal_Model_AssociationInterface::HAS_MANY:
                 // populate the foreign key
-                $key = $association->getModelMapper()->getAdapter()->getPrimaryKey();
-                $object->$key = $association->getModel()->$key;
+                // populate the foreign key
+                $foreignKey = $association->getOption('foreignKey', $association->getModelMapper()->getAdapter()->getPrimaryKey());
+                if (is_array($foreignKey)) {
+                    foreach ($foreignKey as $foreignKeyColumn) {
+                        $object->$foreignKeyColumn = $this->getModelColumnValue($association->getModel(), $foreignKeyColumn);
+                    }
+
+                } else {
+                    $object->$foreignKey = $this->getModelColumnValue($association->getModel(), $foreignKey);
+                }
                 break;
 
             case Zeal_Model_AssociationInterface::HAS_AND_BELONGS_TO_MANY:
@@ -454,7 +462,7 @@ class Zeal_Mapper_Adapter_Zend_Db extends Zeal_Mapper_AdapterAbstract
                     }
                 }
 
-                if ($primaryKey) {
+                if ($primaryKey && count($idsProcessed) > 0) {
                     // delete any objects that weren't submitted
                     // TODO could use some refactoring
                     $associationKey = $association->getMapper()->getAdapter()->getPrimaryKey();
@@ -469,36 +477,59 @@ class Zeal_Mapper_Adapter_Zend_Db extends Zeal_Mapper_AdapterAbstract
                 $foreignKey = $association->getOption('foreignKey', $this->getMapper()->getAdapter()->getPrimaryKey());
                 $associationForeignKey = $association->getOption('associationForeignKey', $association->getMapper()->getAdapter()->getPrimaryKey());
 
-                $objectKeyValue = $objectKeyValue = $object->{$foreignKey};
+                // build a base query for the lookup which the later queries are based on
+                $baseQuery = new Zeal_Mapper_Adapter_Zend_Db_Query($this->getDb());
+                $baseQuery->from($lookupTable, '');
+                if (is_array($foreignKey)) {
+                    foreach ($foreignKey as $foreignKeyColumn) {
+                        $baseQuery->where("$foreignKeyColumn = ?", $this->getModelColumnValue($object, $foreignKeyColumn));
+                    }
+                } else {
+                    $baseQuery->where("$foreignKey = ?", $this->getModelColumnValue($object, $foreignKey));
+                }
 
                 $idsProcessed = array();
                 $associatedObjects = $object->{$association->getShortname()}->getObjects();
                 foreach ($associatedObjects as $associatedObject) {
                     $associatedObjectKeyValue = $associatedObject->{$association->getMapper()->getAdapter()->getPrimaryKey()};
+                    if ($associatedObjectKeyValue) {
+                        $query = clone $baseQuery;
+                        $query->columns('COUNT(*)');
+                        $query->where("$associationForeignKey = ?", $associatedObjectKeyValue);
 
-                    $count = $this->getDb()->fetchOne("
-                        SELECT COUNT(*) FROM $lookupTable WHERE $foreignKey = ? AND $associationForeignKey = ?",
-                        array($objectKeyValue, $associatedObjectKeyValue)
-                    );
-                    if ($count == 0) {
-                        // create the lookup
-                        $this->getDb()->insert($lookupTable, array(
-                            $foreignKey => $objectKeyValue,
-                            $associationForeignKey => $associatedObjectKeyValue
-                        ));
+                        $count = $this->getDb()->fetchOne($query);
+                    } else {
+                        throw new Zeal_Exception('Unable to create a lookup with an associated object key value');
                     }
-                    $idsProcessed[] = $associatedObjectKeyValue;
+
+                    if ($count == 0) {
+                        // build the lookup
+                        $lookupData = array($associationForeignKey => $associatedObjectKeyValue);
+                        if (is_array($foreignKey)) {
+                            foreach ($foreignKey as $foreignKeyColumn) {
+                                $lookupData[$foreignKeyColumn] = $this->getModelColumnValue($object, $foreignKeyColumn);
+                            }
+                        } else {
+                            $lookupData[$foreignKey] = $this->getModelColumnValue($object, $foreignKey);
+                        }
+
+                        // create the lookup
+                        $this->getDb()->insert($lookupTable, $lookupData);
+                    }
+
+                    $idsProcessed[] = (int)$associatedObjectKeyValue;
                 }
 
                 if (count($idsProcessed) > 0) {
                     // remove lookups for any objects that haven't been updated
-                    $this->getDb()->query(
-                        "DELETE FROM $lookupTable WHERE $foreignKey = ? AND $associationForeignKey NOT IN (".$this->getDb()->quote($idsProcessed).")",
-                        array($objectKeyValue)
-                    );
+                    $query = clone $baseQuery;
+                    $query->where("$associationForeignKey NOT IN (?)", $idsProcessed);
+
+                    $this->getDb()->query("DELETE ".$query);
                 } else {
                     // remove all the lookups
-                    $this->getDb()->query("DELETE FROM $lookupTable WHERE $foreignKey = ?", $objectKeyValue);
+                    $query = clone $baseQuery;
+                    $this->getDb()->query("DELETE ".$query);
                 }
                 break;
         }
@@ -583,20 +614,46 @@ class Zeal_Mapper_Adapter_Zend_Db extends Zeal_Mapper_AdapterAbstract
                 $table = $this->getTableName();
                 $key = $association->getOption('primaryKey', $association->getModelMapper()->getAdapter()->getPrimaryKey());
                 $foreignKey = $association->getOption('foreignKey', $key);
-                if (is_array($foreignKey)) {
-                    $query = $association->getMapper()->query();
-                    foreach ($foreignKey as $foreignKeyColumn) {
-                        $value = $this->getModelColumnValue($association->getModel(), $foreignKeyColumn);
-                        if (!$value) {
-                            return false;
+
+                if ($association->hasOption('through')) {
+                    $through = $association->getOption('through');
+                    $throughQuery = $association->getModel()->$through->query();
+                    if ($throughQuery) {
+                        // join the table used in the through association
+                        $throughFrom = $throughQuery->getPart(Zend_Db_Select::FROM);
+                        if (count($throughFrom) == 1) {
+                            $fromDetails = current($throughFrom);
+                            $key = $association->getMapper()->getAdapter()->getPrimaryKey();
+
+                            $joinCondition = "$table.$key = {$fromDetails['tableName']}.$key";
+                            $query->joinInner($fromDetails['tableName'], $joinCondition, '');
                         }
 
-                        $query->where("$table.$foreignKeyColumn = ?", $value);
+                        // add the where clause from the through association
+                        $throughWhere = $throughQuery->getPart(Zend_Db_Select::WHERE);
+                        $query->where(implode(' ', $throughWhere));
+
+                    } else {
+                        // no value, object may not have been saved yet
+                        return false;
                     }
 
                 } else {
-                    $value = $this->getModelColumnValue($association->getModel(), $foreignKey);
-                    $query->where("$table.$foreignKey = ?", $value);
+                    if (is_array($foreignKey)) {
+                        $query = $association->getMapper()->query();
+                        foreach ($foreignKey as $foreignKeyColumn) {
+                            $value = $this->getModelColumnValue($association->getModel(), $foreignKeyColumn);
+                            if (!$value) {
+                                return false;
+                            }
+
+                            $query->where("$table.$foreignKeyColumn = ?", $value);
+                        }
+
+                    } else {
+                        $value = $this->getModelColumnValue($association->getModel(), $foreignKey);
+                        $query->where("$table.$foreignKey = ?", $value);
+                    }
                 }
                 break;
 
