@@ -229,6 +229,8 @@ class Zeal_Model_Association_Data_Collection extends Zeal_Model_Association_Data
 
         if (!$this->getAssociation()->getModelMapper()->getAdapter()->isNewRecord($this->getModel()) && !$this->loaded && $this->loadRequired) {
             $this->load();
+        } else if ($this->getAssociation()->getModelMapper()->getAdapter()->isNewRecord($this->getModel())) {
+            $this->loadRequired = false;
         }
 
         $this->objects[] = $object;
