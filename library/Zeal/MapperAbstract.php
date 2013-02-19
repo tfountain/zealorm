@@ -787,11 +787,19 @@ abstract class Zeal_MapperAbstract implements Zeal_MapperInterface
         $this->_pluginCallback('preDelete', $object);
 
         $success = $this->_delete($object);
+        if ($success) {
+            $this->deleteDependent($object);
+        }
 
         // postDelete callback
         $this->_pluginCallback('postDelete', $object);
 
         return $success;
+    }
+
+    protected function deleteDependent($object)
+    {
+
     }
 
     /**
