@@ -388,6 +388,20 @@ abstract class Zeal_ModelAbstract implements Zeal_ModelInterface, Serializable
         return $data;
     }
 
+    public function toJson($includeAssociations = null)
+    {
+        $data = $this->toArray($includeAssociations);
+        if ($data) {
+            foreach ($data as $key => $value) {
+                if (is_object($value) && method_exists($value, '__toString')) {
+                    $data[$key] = $value->__toString();
+                }
+            }
+        }
+
+        return $data;
+    }
+
     protected function unsavedAssociations()
     {
         $unsavedAssociations = array();
