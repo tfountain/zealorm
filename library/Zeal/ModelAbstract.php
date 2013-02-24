@@ -198,7 +198,7 @@ abstract class Zeal_ModelAbstract implements Zeal_ModelInterface, Serializable
             $this->associationData[$associationShortname]->populateFromListener($var, $value);
 
         } else {
-            if (!$this->dirty && $this->$var !== $value) {
+            if (!$this->dirty && $this->$var != $value) {
                 $this->dirty = true;
             }
 
