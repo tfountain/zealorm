@@ -264,6 +264,22 @@ class Zeal_Model_Association_Data_Collection extends Zeal_Model_Association_Data
     }
 
     /**
+     * Deletes all the association objects
+     *
+     * @return boolean
+     */
+    public function delete()
+    {
+        if ($this->getObjects()) {
+            foreach ($this->getObjects() as $object) {
+                $this->getMapper()->delete($object);
+            }
+        }
+
+        return true;
+    }
+
+    /**
      * Returns a query object for this collection
      *
      * @return Zeal_Mapper_QueryInterface

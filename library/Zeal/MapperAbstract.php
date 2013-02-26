@@ -797,9 +797,22 @@ abstract class Zeal_MapperAbstract implements Zeal_MapperInterface
         return $success;
     }
 
+    /**
+     * Deletes any dependent objects
+     *
+     * @param $object
+     * @return boolean
+     */
     protected function deleteDependent($object)
     {
+        foreach ($object->getAssociations() as $associationShortname => $association) {
+            if ($association->getOption('dependent') == 'delete') {
+                $data = $object->$associationShortname;
+                $data->delete();
+            }
+        }
 
+        return true;
     }
 
     /**

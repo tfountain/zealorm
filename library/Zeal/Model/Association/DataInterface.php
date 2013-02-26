@@ -26,5 +26,7 @@ interface Zeal_Model_Association_DataInterface
 
     public function create(array $data = array());
 
+    public function delete();
+
     public function getDataForSerialization();
 }

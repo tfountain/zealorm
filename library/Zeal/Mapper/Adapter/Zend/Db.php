@@ -594,6 +594,11 @@ class Zeal_Mapper_Adapter_Zend_Db extends Zeal_Mapper_AdapterAbstract
 
                     $query->where("$table.$key = ?", $value);
                 }
+
+                if ($association->hasOption('select')) {
+                    $query->reset(Zend_Db_Select::COLUMNS)
+                          ->columns(new Zend_Db_Expr($association->getOption('select')));
+                }
                 break;
 
             case Zeal_Model_AssociationInterface::HAS_ONE:
