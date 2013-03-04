@@ -827,6 +827,13 @@ abstract class Zeal_ModelAbstract implements Zeal_ModelInterface, Serializable
         return (bool)$this->dirty;
     }
 
+    /**
+     * Adds a listener
+     *
+     * @param type $listener
+     * @param type $associationShortname
+     * @return type
+     */
     public function addListener($listener, $associationShortname)
     {
         if (!$this->listeners) {
@@ -836,5 +843,31 @@ abstract class Zeal_ModelAbstract implements Zeal_ModelInterface, Serializable
         $this->listeners[$listener] = $associationShortname;
 
         return $this;
+    }
+
+    /**
+     * Returns true if there's a listener for the supplied string
+     *
+     * @param string $shortname
+     * @return boolean
+     */
+    public function isListener($shortname)
+    {
+        return (is_array($this->listeners) && isset($this->listeners[$shortname]));
+    }
+
+    /**
+     * Returns the association shortname for the supplied listener
+     *
+     * @param string $shortname
+     * @return string
+     */
+    public function getListener($shortname)
+    {
+        if (!$this->isListener($shortname)) {
+            return false;
+        }
+
+        return $this->listeners[$shortname];
     }
 }
