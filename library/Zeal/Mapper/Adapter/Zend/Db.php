@@ -604,15 +604,24 @@ class Zeal_Mapper_Adapter_Zend_Db extends Zeal_Mapper_AdapterAbstract
             case Zeal_Model_AssociationInterface::HAS_ONE:
                 $table = $this->getTableName();
                 $key = $association->getModelMapper()->getAdapter()->getPrimaryKey();
-                $value = $association->getModel()->$key;
 
-                if (!isset($value)) {
-                    //throw new Zeal_Model_Exception("Unable to populate belongsTo query for association '".$association->getShortname()."' in ".$association->getModelMapper()->getClassName()." as the field '$key' has no value in model");
-                    return false;
+                $foreignKey = $association->getOption('foreignKey', $key);
+                if (is_array($foreignKey)) {
+                    foreach ($foreignKey as $foreignKeyColumn) {
+                        $value = $this->getModelColumnValue($association->getModel(), $foreignKeyColumn);
+                        $query->where("$table.$foreignKeyColumn = ?", $value);
+                    }
+
+                    // TODO check for values here?
+
+                } else {
+                    $value = $this->getModelColumnValue($association->getModel(), $foreignKey);
+                    if (!isset($value)) {
+                        return false;
+                    }
+
+                    $query->where("$table.$key = ?", $value);
                 }
-
-                $query = $association->getMapper()->query();
-                $query->where("$table.$key = ?", $value);
                 break;
 
             case Zeal_Model_AssociationInterface::HAS_MANY:

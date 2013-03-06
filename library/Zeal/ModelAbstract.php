@@ -418,8 +418,6 @@ abstract class Zeal_ModelAbstract implements Zeal_ModelInterface, Serializable
     public function toArrayForSerialization()
     {
         $sleepFields = $this->__sleep();
-
-
     }
 
     /**
