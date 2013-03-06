@@ -587,6 +587,10 @@ abstract class Zeal_ModelAbstract implements Zeal_ModelInterface, Serializable
      */
     public function getAssociations()
     {
+        if ($this->associations === null) {
+            return array();
+        }
+
         return $this->associations;
     }
 
