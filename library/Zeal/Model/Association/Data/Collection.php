@@ -244,7 +244,7 @@ class Zeal_Model_Association_Data_Collection extends Zeal_Model_Association_Data
     /**
      *
      * @param array $data
-     * @return boolean
+     * @return object
      */
     public function create(array $data = array())
     {
@@ -257,7 +257,7 @@ class Zeal_Model_Association_Data_Collection extends Zeal_Model_Association_Data
 
             $this->objects[] = $object;
 
-            return true;
+            return $object;
         }
 
         return false;
