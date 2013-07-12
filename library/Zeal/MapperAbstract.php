@@ -207,12 +207,12 @@ abstract class Zeal_MapperAbstract implements Zeal_MapperInterface
     /**
      * Is the object cached?
      *
-     * @param mixed $keyValue
+     * @param mixed $cacheKey
      * @return boolean
      */
-    public function isCached($keyValue)
+    public function isCached($cacheKey)
     {
-        return Zeal_Identity_Map::isCached($this->getClassName(), $keyValue);
+        return Zeal_Identity_Map::isCached($this->getClassName(), $cacheKey);
     }
 
     /**
@@ -575,9 +575,20 @@ abstract class Zeal_MapperAbstract implements Zeal_MapperInterface
      */
     public function fetchObject($query)
     {
+        $cacheKey = $query->getCacheKey($this);
+        if ($cacheKey && $this->isCached($cacheKey)) {
+            return $this->getCached($cacheKey);
+        }
+
         $data = $this->getAdapter()->fetchObject($query);
         if ($data) {
-            return $this->resultToObject($data, false);
+            $object = $this->resultToObject($data, false);
+
+            if ($cacheKey) {
+                $this->cache($object, $cacheKey);
+            }
+
+            return $object;
         }
 
         return false;

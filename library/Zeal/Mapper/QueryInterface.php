@@ -12,4 +12,5 @@ interface Zeal_Mapper_QueryInterface
 {
     public function count();
 
+    public function getCacheKey($mapper);
 }
