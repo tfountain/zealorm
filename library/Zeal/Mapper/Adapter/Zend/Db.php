@@ -213,10 +213,9 @@ class Zeal_Mapper_Adapter_Zend_Db extends Zeal_Mapper_AdapterAbstract
      */
     public function count(Zeal_Mapper_QueryInterface $query)
     {
-        $query->columns('COUNT(*) AS count');
+        $query->reset(Zend_Db_Select::COLUMNS)
+              ->columns('COUNT(*) AS count');
         $data = $this->getDb()->fetchRow($query);
-
-        // FIXME - this query is returning lots of unnecessary data
 
         if (isset($data['count'])) {
             return (int)$data['count'];
